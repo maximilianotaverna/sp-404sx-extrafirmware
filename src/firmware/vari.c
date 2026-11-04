@@ -98,7 +98,6 @@ static const char chr_mon_s[] SECT(".rodata.chr") = "MON";
 static const char chop_run_s[] SECT(".rodata.chr") = "ChP";
 static const char chop_done_s[] SECT(".rodata.chr") = "don";
 static const char chop_err_s[] SECT(".rodata.chr") = "Err";
-static const char chop_pad_s[] SECT(".rodata.chr") = "Pad";
 static int chr_menu(struct page *p);
 static int chr_padkey(struct event *e);
 static unsigned char pad_fp(int pad);
@@ -422,10 +421,8 @@ CHR(chopdone) static void chop_done_feedback(int state) {
 }
 CHR(choprefresh) static void chop_refresh(void) {
     int state = chop_st.active;
-    if (!state) return;
     if (state == 1) R_MSG(chop_run_s);
-    else if (state == 2) R_MSG(chop_pad_s);
-    else {
+    else if (state >= 3) {
         chop_st.active = 0;
         chop_done_feedback(state);
     }
@@ -830,6 +827,7 @@ CHR(chopone) static int chop_one(int (*fn)(void), int d, unsigned start, unsigne
         vari_xset(d, speed);
         R_PADSET(31, start, d);
         R_PADSET(33, end, d);
+        R_PADSET(38, 1, d);
     }
     return r;
 }

@@ -16,7 +16,7 @@ static int rd(int fd,void*b,int n){ int k=card_len-fd_pos<n?card_len-fd_pos:n; m
 static int wr(int fd,const void*b,int n){ memcpy(card,b,n); card_len=n; writes++; return n; }
 static void cl(int fd){ fd_mode=-1; } static int cardok(void){return 1;}
 static void st(int id,int v,int pad,int f){(void)pad;(void)f;if(id==60)p60=v;if(id==61)p61=v;} static int marksaves;
-static void pset(int id,int v,int pad){if(id==31)*(unsigned*)(padinfo+pad*32+8)=v;if(id==33)*(unsigned*)(padinfo+pad*32+12)=v;}
+static void pset(int id,int v,int pad){if(id==31)*(unsigned*)(padinfo+pad*32+8)=v;if(id==33)*(unsigned*)(padinfo+pad*32+12)=v;if(id==38)padinfo[pad*32+19]=(unsigned char)v;}
 static int psave(void){marksaves++;return 0;} static int evo(void*p,void*e){return 0;} static void dsp(void*p){}
 #define R_SET st
 #define R_PADSET pset
@@ -141,6 +141,7 @@ int main(){ vari_need_load=1;
       CHECK(*(unsigned*)(padinfo+(21+i)*32+8)==0x200+i*0x4000, "auto-slice start boundary");
       CHECK(*(unsigned*)(padinfo+(21+i)*32+12)==0x200+(i+1)*0x4000, "auto-slice end boundary");
       CHECK(vari_tab.e[21+i].pos==-12, "auto-slice copies varispeed setting");
+      CHECK(padinfo[(21+i)*32+19]==1, "auto-slice enables gate on every destination");
     }
     chop_st.active=0; /* the play-page refresh consumes the completion state on hardware */
     /* A non-even span distributes aligned remainder units without cumulative drift. */

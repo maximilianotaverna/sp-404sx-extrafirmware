@@ -3,6 +3,17 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.16 stable count display and gated chops
+
+Checked in software:
+- The selected `Cxx` remains visible until the first destination pad is pressed; the immediate `Pad` prompt is removed.
+- Every generated destination is explicitly written with GATE = 1.
+- Persistent `ChP`, final `don`, failure `Err`, and the 2–16 count range remain unchanged.
+- Native output SHA-256: `412fcb2e9aa2beb546deca2fa87532b708caa70f17308276e225a0e397c1eefd`.
+
+Awaiting hardware confirmation:
+- Confirm `2.16`, stable `Cxx`, gated destination pads, persistent `ChP`, and final `don`.
+
 ## v2.15 destination prompt and flexible slice count
 
 Checked in software:

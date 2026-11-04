@@ -85,7 +85,7 @@ int main(){
   mock_cancel=1; CHECK(play_ev(0,36,1)==1 && chop_st.active==2 && chop_st.source==26 && chop_st.count==4 && !strcmp(mock_msg,"C04"),
                        "CANCEL + MARK: current source and four slices");
   mock_cancel=0; chr_page_refresh(0,mock_pg); chr_page_refresh(0,mock_pg);
-  CHECK(chop_st.active==2 && !strcmp(mock_msg,"Pad"), "destination prompt: show Pad until a destination is pressed");
+  CHECK(chop_st.active==2 && !strcmp(mock_msg,"C04"), "destination selection: keep the chosen count visible");
   CHECK(play_ev(1,2,0)==1 && chop_st.count==2 && !strcmp(mock_msg,"C02"), "CTRL 3 left: select two slices");
   CHECK(play_ev(1,2,90)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
   CHECK(play_ev(1,2,127)==1 && chop_st.count==16 && !strcmp(mock_msg,"C16"), "CTRL 3 right: select 16 slices");

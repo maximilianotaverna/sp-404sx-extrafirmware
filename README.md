@@ -6,8 +6,8 @@ way. It adds tape-style **varispeed** to every pad (pitch and tempo change toget
 slowing down a tape or a turntable), a **chromatic mode** that turns a bank into a keyboard, and **auto-slice**
 that divides a sample across any number from 2 to 16 consecutive pads.
 
-> **Current sample-chop test release: v2.15** (the version screen shows `2.15`), based on Roland's system 1.07.
-> Output SHA-256: `2062c7d953f75ee1621a8b83d2a6d4375820e2db7f6416ec0aa17804118e5e54`.
+> **Current sample-chop test release: v2.16** (the version screen shows `2.16`), based on Roland's system 1.07.
+> Output SHA-256: `412fcb2e9aa2beb546deca2fa87532b708caa70f17308276e225a0e397c1eefd`.
 
 ## What it adds
 
@@ -57,14 +57,14 @@ Full details: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 1. Play the loaded pad you want to slice.
 2. Hold **CANCEL** and press **MARK**. The display shows `C04`.
 3. Turn **CTRL 3** to select any count from `C02` through `C16` (the default is `C04`).
-4. When `Pad` appears, select the destination bank normally, then press the first empty destination pad.
+4. The selected `Cxx` remains visible; select the destination bank normally, then press the first empty destination pad.
 
 `ChP` appears and MARK blinks while the copies and slice marks are being written. Wait for `don`, when MARK
 stops blinking. `Err` means processing failed.
 
 The source is copied to consecutive pads with evenly divided start/end marks. Every destination must be empty
 and the source cannot be inside the destination range. `FUL` means the range is unavailable; press **CANCEL**
-and choose another. CANCEL also exits before a destination is chosen.
+and choose another. CANCEL also exits before a destination is chosen. Every generated chop has GATE enabled.
 
 ## How to install
 

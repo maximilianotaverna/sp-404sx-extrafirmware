@@ -25,8 +25,8 @@ python3 patch.py path/to/sp404sx_up.bin
 It prints
 
 ```
-SP-404SX/A EXTRAfirmware v2.15 written to out/sp404sx_up.bin
-SHA-256 2062c7d953f75ee1621a8b83d2a6d4375820e2db7f6416ec0aa17804118e5e54
+SP-404SX/A EXTRAfirmware v2.16 written to out/sp404sx_up.bin
+SHA-256 412fcb2e9aa2beb546deca2fa87532b708caa70f17308276e225a0e397c1eefd
 ```
 
 Either way the file you get is named `sp404sx_up.bin` and has that SHA-256. The SP-404SX/A only installs
@@ -44,7 +44,7 @@ a file with exactly that name.
 
 ## 3. Check it
 
-Power off, then hold **MARK** while powering on: the display shows the version, **`2.15`**
+Power off, then hold **MARK** while powering on: the display shows the version, **`2.16`**
 (Roland's firmware shows `1.07`). You can also select a pad, press **TIME/BPM** and turn **CTRL 3**: the
 display shows a BPM that changes as you turn it.
 

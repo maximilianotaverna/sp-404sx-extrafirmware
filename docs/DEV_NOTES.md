@@ -584,6 +584,16 @@ Implementation (vari.c "chromatic mode"):
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
 
+## Test release v2.16 — stable count display and gated chops
+- The immediate `Pad` refresh is removed because hardware showed it replacing `Cxx` before the user could read
+  the chosen count. A true delayed prompt would require another timing state/code region, so the safer behavior
+  keeps `Cxx` visible until the destination pad is pressed.
+- After each native copy succeeds, parameter 38 is set to 1 before the final PAD_INFO save, enabling GATE on
+  every generated chop independently of the source pad's setting.
+- Host persistence tests verify GATE = 1 on every destination. The copy/mark engine and 2–16 planner are unchanged.
+- Output: 475376 bytes, MD5 `6d03f87ab5bbe7471f5c76d050d9d5a8`, SHA-256
+  `412fcb2e9aa2beb546deca2fa87532b708caa70f17308276e225a0e397c1eefd`.
+
 ## Test release v2.15 — destination prompt and flexible count
 - CTRL 3 maps its full 0..127 range to every integer slice count from 2 through 16; the initial count remains 4.
 - `Pad` is redrawn by the play-page refresh while the destination selector is active. `ChP` is likewise redrawn

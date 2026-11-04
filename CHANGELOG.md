@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.16 (stable count display and gated chops)
+
+The version screen shows `2.16`. Expected patched-file SHA-256:
+`412fcb2e9aa2beb546deca2fa87532b708caa70f17308276e225a0e397c1eefd`.
+
+- Removes the immediate `Pad` prompt; the selected `Cxx` remains visible until a destination pad is pressed.
+- Every generated chop now has GATE enabled, regardless of the source pad's setting.
+- Keeps the flexible 2–16 count, persistent `ChP`, MARK blink, `don`, and `Err` feedback.
+
 ## v2.15 (destination prompt and flexible slice count)
 
 The version screen shows `2.15`. Expected patched-file SHA-256:
