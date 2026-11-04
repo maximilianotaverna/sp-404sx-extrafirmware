@@ -3,6 +3,17 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.14 processing feedback
+
+Checked in software:
+- Builds on the hardware-confirmed v2.13 CANCEL + MARK gesture.
+- Shows `ChP` and blinks MARK during the copy/mark batch.
+- Shows `don` and stops the MARK blink after all slice marks are saved; `Err` reports a worker failure.
+- Native output SHA-256: `074b37745cc4e1b114e3eefd83990dcd557b1a25cd84132b94eb015d49014f42`.
+
+Awaiting hardware confirmation:
+- Hold MARK during power-on and confirm `2.14`, then run an auto-slice and confirm `ChP`/blink changes to `don`/off.
+
 ## v2.13 corrected panel mapping
 
 Checked in software:
@@ -12,9 +23,7 @@ Checked in software:
   `e3d21b2c2d6746e618f2403cce25210df17fb9e3b250394dce9b3159859e06ec`.
 - All host UI, resampler, persistence, chromatic, chop and stress tests pass.
 
-Awaiting hardware confirmation:
-- Hold MARK during power-on and confirm `2.13`, play a loaded sample, then hold CANCEL and press MARK; `C04`
-  should appear.
+Hardware confirmed: CANCEL + MARK opens the slicer and the slice batch works.
 
 ## v2.12 sample-chop hardware fix
 

@@ -95,6 +95,9 @@ struct chop_state chop_st SECT(".chrdata");
 static const u16 chr_semi[12] SECT(".rodata.chr") = { 0, 3897, 8026, 12400, 17034, 21944, 27146, 32657, 38496, 44682, 51236, 58179 };
 static const char chr_on_s[] SECT(".rodata.chr") = "C.ON";
 static const char chr_mon_s[] SECT(".rodata.chr") = "MON";
+static const char chop_run_s[] SECT(".rodata.chr") = "ChP";
+static const char chop_done_s[] SECT(".rodata.chr") = "don";
+static const char chop_err_s[] SECT(".rodata.chr") = "Err";
 static int chr_menu(struct page *p);
 static int chr_padkey(struct event *e);
 static unsigned char pad_fp(int pad);
@@ -248,6 +251,7 @@ MIDI int vari_event(struct page *p, struct event *e) {
 #define R_RELPAD  ((void (*)(int pad))0x0C084B48)                     /* pad released (gate: stop it)            */
 #define R_HELD    ((int  (*)(int id))0x0C0BEA7C)                      /* 1 while panel button `id` is held       */
 #define R_MSG     ((void (*)(const char *s))0x0C0D0150)               /* play page text, as Roland's P.ON / P.OF  */
+#define R_LED     ((void (*)(int id, int value))0x0C0AD8F4)           /* panel LED: 0 off, 1 on, 2 blink          */
 #define CURPAGE   (*(void *const volatile *)0x0CDAF934)               /* page manager: page shown now             */
 #define FWDMODE   (*(volatile const int *)0x0C138F5C)                 /* Roland: SHIFT + TIME/BPM = FWD while set */
 #define REQOBJ    ((void *)0x0CCAE0C4)                                /* the note handler's play request object   */
@@ -407,6 +411,21 @@ CHR(padkey) int chr_holdget(int id, int pad, getfn orig) {
     if (b >= 0) pad = chr_tab.b[b].src - 1;
     return orig(id, pad);
 }
+CHR(chopstart) static void chop_start_feedback(void) {
+    R_LED(13, 2); /* MARK LED: stock refresh maps sample MARK parameter 36 to LED 13. */
+    R_MSG(chop_run_s);
+}
+CHR(chopdone) static void chop_done_feedback(int state) {
+    R_LED(13, 0);
+    R_MSG(state == 3 ? chop_done_s : chop_err_s);
+}
+CHR(choprefresh) static void chop_refresh(void) {
+    int state = chop_st.active;
+    if (state >= 3) {
+        chop_st.active = 0;
+        chop_done_feedback(state);
+    }
+}
 CHR(chopui) static int chop_ui(struct event *e) {
     int n, first, source;
     if (e->type == 0 && e->val) chr_st.want = e->id == BTN_BPM && R_HELD(BTN_SHIFT) && !FWDMODE;
@@ -435,7 +454,10 @@ CHR(chopui) static int chop_ui(struct event *e) {
     }
     if (e->id < 1 || e->id > 12) return 0;
     first = R_GET(P_BANK, -1) * 12 + e->id - 1;
-    if (chop_arm(chop_st.source, first, chop_st.count)) R_COPY(chop_st.source, first);
+    if (chop_arm(chop_st.source, first, chop_st.count)) {
+        chop_start_feedback();
+        R_COPY(chop_st.source, first);
+    }
     else {
         chr_st.txt[0] = 'F'; chr_st.txt[1] = 'U'; chr_st.txt[2] = 'L'; chr_st.txt[3] = 0;
         R_MSG(chr_st.txt);
@@ -459,6 +481,7 @@ CHR(pageenter) int chr_page_enter(void *page, pgfn orig) {
 }
 CHR(pagerefres) int chr_page_refresh(void *page, pgfn orig) {
     int r = orig(page), b;
+    chop_refresh();
     if (chr_st.show) {
         b = R_GET(P_BANK, -1);
         if (b >= 0 && b < 10 && chr_tab.b[b].src) R_MSG(chr_on_s);
@@ -816,7 +839,6 @@ CHR(choprun) static int chop_run(int (*fn)(void)) {
     unsigned quantum = PADINFO[source * 32 + 22] == 2 ? 4 : 2;
     unsigned units, base, step, rem, error = 0, pos = start;
     int speed = vari_tab.e[source].pos;
-    chop_st.active = 0;
     if (end <= start) return 1;
     units = R_DIV(end - start, quantum);
     base = R_DIV(units, count);
@@ -840,7 +862,11 @@ CHR(choprun) static int chop_run(int (*fn)(void)) {
 CHR(xop) int vari_xop(int (*fn)(void), int exch) {
     int p[2], i, r;
     s8 s[2];
-    if (!exch && chop_st.active == 1) return chop_run(fn);
+    if (!exch && chop_st.active == 1) {
+        r = chop_run(fn);
+        chop_st.active = (r & 0xFF) ? 4 : 3;
+        return r;
+    }
     for (i = 0; i < 2; i++) {
         p[i] = R_GET(60 + i, -1);
         if ((unsigned)p[i] >= 120) return fn();

@@ -114,6 +114,9 @@ chromatic.
 3. Turn **CTRL 3** to choose `C04`, `C08`, `C12` or `C16`.
 4. Change bank if needed, then press the first empty destination pad.
 
+The display shows `ChP` and MARK blinks while the batch is processed. Wait until `don` appears and MARK stops
+blinking before using the new pads. `Err` means the batch failed.
+
 The firmware copies the source to consecutive pads and gives each copy one equal section using its start/end
 marks. The source is unchanged. All destination pads must be empty and the source cannot be in that range. If
 `FUL` appears, press **CANCEL** and choose another destination. CANCEL before choosing a pad exits without copying.
@@ -123,7 +126,7 @@ marks. The source is unchanged. All destination pads must be empty and the sourc
 - Roland's **factory hardware-test mode** (the technician test screens started from a test file on the card
   or a key combination at power-on) is removed to make room for the new code. Nothing a player uses
   depends on it. Installing Roland's original update brings it back.
-- The **power-on version display** (hold MARK) shows `2.13` instead of `1.07`.
+- The **power-on version display** (hold MARK) shows `2.14` instead of `1.07`.
 
 ## Limits and notes
 

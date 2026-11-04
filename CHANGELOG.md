@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.14 (auto-slice processing feedback)
+
+The version screen shows `2.14`. Expected patched-file SHA-256:
+`074b37745cc4e1b114e3eefd83990dcd557b1a25cd84132b94eb015d49014f42`.
+
+- Shows `ChP` and blinks the MARK light after a valid destination is selected.
+- Shows `don` and stops the blink only after the copy batch and final mark save complete.
+- Shows `Err` and stops the blink if the native copy worker fails.
+- Keeps the hardware-confirmed v2.13 CANCEL + MARK gesture and slice engine unchanged.
+
 ## v2.13 (corrected panel mapping)
 
 The version screen shows `2.13`. Expected patched-file SHA-256:

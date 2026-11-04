@@ -30,6 +30,8 @@ static int mock_playreq(void *q, int kind, int pad, int vel) {   /* Roland: load
 static void mock_rel(int pad) { mock_relpad = pad; }
 static int mock_held_fn(int id) { return id == 40 ? mock_held : id == 20 ? mock_shift : id == 34 ? mock_cancel : 0; }
 static void mock_msg_fn(const char *s) { mock_msg = s; mock_msgs++; }
+static int mock_led_id = -1, mock_led_value = -1;
+static void mock_led_fn(int id, int value) { mock_led_id = id; mock_led_value = value; }
 #define R_PLAYREQ mock_playreq
 #define R_PLAYPAD mock_playpad
 #define R_PLAYING mock_isplaying
@@ -39,6 +41,7 @@ static void mock_msg_fn(const char *s) { mock_msg = s; mock_msgs++; }
 #define R_RELPAD  mock_rel
 #define R_HELD    mock_held_fn
 #define R_MSG     mock_msg_fn
+#define R_LED     mock_led_fn
 #define CURPAGE   ((const void *)mock_page)
 #define FWDMODE   mock_fwdmode
 #define REQOBJ    ((void *)0)

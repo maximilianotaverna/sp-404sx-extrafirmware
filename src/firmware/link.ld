@@ -46,14 +46,14 @@ SECTIONS {
   .wsp : { *(.rodata.wsp) . = ALIGN(4); } > wsp
   .helper : { *(.text.helper) . = ALIGN(4); } > helper
   .midi : { *(.text.midi) . = ALIGN(4); } > midi
-  .led : { *(.text.led) . = ALIGN(4); } > led
+  .led : { *(.text.led) *(.text.chrchopstart) . = ALIGN(4); } > led
   .dev : { *(.text.dev) . = ALIGN(4); } > dev
   .chra : { *(.text.chrmenuev) . = ALIGN(4); } > chra
   .chrb : { *(.text.chrratio) . = ALIGN(4); } > chrb
   .chrc : { *(.text.chrtick) . = ALIGN(4); } > chrc
   .chrd : { *(.text.chrkeyof) *(.text.chrstop) . = ALIGN(4); } > chrd
   .chre : { *(.text.chrpagerefres) . = ALIGN(4); } > chre
-  .chrf : { *(.text.chrpageevent) . = ALIGN(4); } > chrf
+  .chrf : { *(.text.chrpageevent) *(.text.chrchopdone) . = ALIGN(4); } > chrf
   .chrh : { *(.text.chrstubs) . = ALIGN(4); } > chrh
   .chri : { *(.text.chrrequest) . = ALIGN(4); } > chri
   .chrj : { *(.text.chrused) . = ALIGN(4); } > chrj
@@ -65,7 +65,7 @@ SECTIONS {
   .chrs : { *(.text.chrrelease) . = ALIGN(4); } > chrs
   .chru : { *(.text.chrfree) . = ALIGN(4); } > chru
   .chrv : { *(.text.chrpageenter) . = ALIGN(4); } > chrv
-  .chrt : { *(.text.chrchopui) . = ALIGN(4); } > chrt
+  .chrt : { *(.text.chrchopui) *(.text.chrchoprefresh) . = ALIGN(4); } > chrt
   .chrx : { *(.text.chropen) *(.text.chrload) *(.text.chrchopone) . = ALIGN(4); } > chrx
   .chry : { *(.text.chrnote) *(.text.chrcheck) . = ALIGN(4); } > chry
   .chrz : { *(.text.chrknob) *(.text.chrxset) . = ALIGN(4); } > chrz

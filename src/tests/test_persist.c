@@ -135,19 +135,21 @@ int main(){ vari_need_load=1;
     setpad(20,0x10200,2); *(unsigned*)(padinfo+20*32+8)=0x200; *(unsigned*)(padinfo+20*32+12)=0x10200;
     for(int p=21;p<25;p++) setpad(p,0,0); vari_tab.e[20].pos=-12; marksaves=0; job_mid=0;
     CHECK(chop_arm(20,21,4)==1 && chop_st.active, "auto-slice arms after full destination preflight");
-    p60=20; p61=21; CHECK(vari_xop(job,0)==0 && !chop_st.active, "copy hook consumes armed auto-slice");
+    p60=20; p61=21; CHECK(vari_xop(job,0)==0 && chop_st.active==3, "copy hook publishes auto-slice completion");
     CHECK(marksaves==1, "auto-slice performs one final PAD_INFO mark save");
     for(int i=0;i<4;i++){
       CHECK(*(unsigned*)(padinfo+(21+i)*32+8)==0x200+i*0x4000, "auto-slice start boundary");
       CHECK(*(unsigned*)(padinfo+(21+i)*32+12)==0x200+(i+1)*0x4000, "auto-slice end boundary");
       CHECK(vari_tab.e[21+i].pos==-12, "auto-slice copies varispeed setting");
     }
+    chop_st.active=0; /* the play-page refresh consumes the completion state on hardware */
     /* A non-even span distributes aligned remainder units without cumulative drift. */
     for(int p=30;p<34;p++) setpad(p,0,0); *(unsigned*)(padinfo+20*32+12)=0x1020c; marksaves=0;
     CHECK(chop_arm(20,30,4)==1 && vari_xop(job,0)==0, "uneven auto-slice executes");
     { unsigned want[5]={0x200,0x4200,0x8204,0xc208,0x1020c};
       for(int i=0;i<4;i++) CHECK(*(unsigned*)(padinfo+(30+i)*32+8)==want[i] &&
           *(unsigned*)(padinfo+(30+i)*32+12)==want[i+1], "uneven boundaries match full-span plan"); }
+    chop_st.active=0; /* completion consumed before another chop is selected */
     setpad(22,90000,2); CHECK(chop_arm(20,21,4)==0 && !chop_st.active, "occupied destination rejects whole batch");
     setpad(22,0,0); CHECK(chop_arm(22,21,4)==0, "source overlap rejects whole batch");
   }

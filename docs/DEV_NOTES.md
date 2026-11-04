@@ -584,6 +584,18 @@ Implementation (vari.c "chromatic mode"):
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
 
+## Test release v2.14 — auto-slice processing feedback
+- Hardware confirmed that v2.13 opens with CANCEL + MARK and completes the auto-slice batch.
+- After a valid destination is chosen, the UI shows `ChP` and sets MARK LED 13 to the stock blink value 2.
+  The LED mapping was verified in Roland's stock play-page refresh: sample parameter 36 (MARK) maps to LED 13.
+- The file task only publishes success/error state. The existing play-page UI refresh consumes it, stops the
+  MARK blink, and displays `don` after the final PAD_INFO mark save or `Err` after a native worker failure.
+  Display and LED routines are therefore never called from the file task.
+- The copy and equal-boundary mark engine is unchanged. Feedback helpers fit into the existing reclaimed
+  factory-test regions; LIGHTS remains within its previously approved 0x118-byte slot.
+- Output: 475376 bytes, MD5 `81187aa4db707d3315fd01215569598f`, SHA-256
+  `074b37745cc4e1b114e3eefd83990dcd557b1a25cd84132b94eb015d49014f42`.
+
 ## Test release v2.13 — corrected MARK mapping and CANCEL gesture
 - Hardware confirmed v2.11 and v2.12 installed but neither reacted to physical MARK. Rechecking the complete
   factory switch order found CANCEL = 34, REMAIN = 35, MARK = 36. The earlier ID 44 is SUB PAD; its stock

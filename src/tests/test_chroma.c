@@ -85,9 +85,16 @@ int main(){
   mock_cancel=1; CHECK(play_ev(0,36,1)==1 && chop_st.active==2 && chop_st.source==26 && chop_st.count==4 && !strcmp(mock_msg,"C04"),
                        "CANCEL + MARK: current source and four slices");
   mock_cancel=0; CHECK(play_ev(1,2,70)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
-  mock_bank=4; CHECK(play_ev(0,3,1)==1 && mock_copies==1 && mock_copy_source==26 && mock_copy_first==50 && chop_st.active==1,
-                     "destination pad: arm batch and post one native copy job");
-  chop_st.active=0; mock_bank=2; mock_cancel=1; play_ev(0,36,1); mock_cancel=0;
+  mock_bank=4; CHECK(play_ev(0,3,1)==1 && mock_copies==1 && mock_copy_source==26 && mock_copy_first==50 && chop_st.active==1 &&
+                     !strcmp(mock_msg,"ChP") && mock_led_id==13 && mock_led_value==2,
+                     "destination pad: show ChP, blink MARK, arm batch and post one native copy job");
+  chop_st.active=3; chr_page_refresh(0,mock_pg);
+  CHECK(chop_st.active==0 && !strcmp(mock_msg,"don") && mock_led_id==13 && mock_led_value==0,
+        "UI refresh: show completion and stop MARK blink");
+  chop_st.active=4; chr_page_refresh(0,mock_pg);
+  CHECK(chop_st.active==0 && !strcmp(mock_msg,"Err") && mock_led_value==0,
+        "UI refresh: show failure and stop MARK blink");
+  mock_bank=2; mock_cancel=1; play_ev(0,36,1); mock_cancel=0;
   CHECK(play_ev(0,34,1)==1 && chop_st.active==0 && !strcmp(mock_msg,"CAN") && mock_copies==1, "CANCEL: leave without copying");
   mock_shift=0; mock_midich=0; open_menu(26);
   CHECK(tp.mode==MODE_CHR && chr_tab.b[2].src==27 && chr_tab.b[2].ch==2 && chr_tab.b[2].mode==2 && chr_st.dirty,
