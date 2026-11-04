@@ -117,8 +117,8 @@ chromatic.
 The display shows `ChP` and MARK blinks while the batch is processed. Wait until `don` appears and MARK stops
 blinking before using the new pads. `Err` means the batch failed.
 
-The firmware copies the source to consecutive pads and gives each copy one equal, non-overlapping section using
-its START/END marks. Each END is placed at the next chop's START. The source is unchanged. All destination pads must be empty and the source cannot be in that range. If
+The firmware copies the source to consecutive pads and gives each copy one equal section using its start/end
+marks. The source is unchanged. All destination pads must be empty and the source cannot be in that range. If
 `FUL` appears, press **CANCEL** and choose another destination. CANCEL before choosing a pad exits without copying.
 Every generated chop has **GATE enabled**, regardless of the source pad's GATE setting.
 
@@ -127,7 +127,7 @@ Every generated chop has **GATE enabled**, regardless of the source pad's GATE s
 - Roland's **factory hardware-test mode** (the technician test screens started from a test file on the card
   or a key combination at power-on) is removed to make room for the new code. Nothing a player uses
   depends on it. Installing Roland's original update brings it back.
-- The **power-on version display** (hold MARK) shows `2.20` instead of `1.07`.
+- The **power-on version display** (hold MARK) shows `2.17` instead of `1.07`.
 
 ## Limits and notes
 

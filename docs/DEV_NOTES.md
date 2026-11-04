@@ -584,45 +584,6 @@ Implementation (vari.c "chromatic mode"):
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
 
-## Test release v2.18 — definite chop regions
-- Disassembly of Roland's native pad setter showed that parameter 33 is a length relative to the current START:
-  the setter loads START, adds the supplied value, and stores the resulting END.
-- The earlier chop engine supplied the absolute next boundary, causing START to be added twice and later END
-  positions to clamp to the sample's full data end.
-- Each destination now receives parameter 31 = slice START and parameter 33 = `next - start`. The planner divides
-  the source's selected length directly, so an already-trimmed source is handled correctly too.
-- The host mock now mirrors the native START + length setter and relative-length getter. Existing even and uneven
-  boundary tests therefore verify the actual stored END positions.
-- The change leaves `chrx` at 460 bytes in its existing 464-byte region; no new region is reclaimed.
-- Output: 475440 bytes, MD5 `7b12449e7a1b28cb67f0e21e1f416fda`, SHA-256
-  `3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
-
-Hardware disproved this interpretation: markers remained incorrect and the last chop was extremely short.
-
-## Test release v2.19 — stock-equivalent START/END writes
-- A complete trace of CPageSmplEdit showed that CTRL 1 reads START through parameter 31 but commits it through
-  parameter 32. CTRL 2 reads and writes parameter 33 as an absolute END, clamped against parameter 35.
-- The v2.18 planner incorrectly divided absolute END as though it were a duration, explaining the overrun and
-  very short final region observed on hardware.
-- The worker now reproduces the stock path: GET 31/33, divide `END - START`, SET 32 to the absolute slice START,
-  and SET 33 to the absolute slice END. GATE remains explicitly enabled through parameter 38.
-- The host mock independently models those stock read/write IDs. Existing even and uneven tests verify that each
-  stored END equals the next stored START.
-- Output: 475392 bytes, MD5 `ef69d551ed5eedcd54c7d78219c0eba0`, SHA-256
-  `05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
-
-Hardware showed that only the final destination retained a START marker. Parameter 32 therefore carries shared
-interactive-editor state and cannot safely commit a batch of different pads.
-
-## Test release v2.20 — direct marker records
-- The native 32-byte PAD_INFO record stores absolute START at `+8` and absolute END at `+12`. After each native
-  copy succeeds, the worker writes those two aligned fields directly instead of invoking marker parameters 31–33.
-- Roland's normal parameter 38 still enables GATE, and the existing final PAD_INFO save persists the completed batch.
-- The host test counts marker API calls and requires zero, while checking every stored START/END boundary directly.
-- No new code region is used; `chrx` remains 460 bytes in its existing 464-byte region.
-- Output: 475392 bytes, MD5 `00ff8ecbeac231322ea89c1e222e35a6`, SHA-256
-  `4bb403b5a21d4266e69c08d3e4fb03340663708c777817f84b9d700ea2cb6d20`.
-
 ## Test release v2.17 — persistent destination count
 - Hardware showed that merely leaving the chosen `Cxx` in the display buffer was insufficient: Roland's delayed
   play-page refresh restored the source sample number after roughly 1–2 seconds.

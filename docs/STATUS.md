@@ -3,41 +3,6 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
-## v2.20 direct marker records
-
-Checked in software:
-- Each destination's absolute START and END are written directly to PAD_INFO offsets `+8` and `+12` after its native copy succeeds.
-- The chop engine makes zero calls to interactive marker parameters 31–33; a regression counter enforces this.
-- Every generated END equals the following slice's START, including uneven divisions and an edited source START.
-- All host tests and the 308-million-output stress test pass; web and native patch outputs are byte-identical.
-- Native output SHA-256: `4bb403b5a21d4266e69c08d3e4fb03340663708c777817f84b9d700ea2cb6d20`.
-
-Awaiting hardware confirmation:
-- Confirm `2.20`, distinct START markers on every destination, and each END at the next chop's START.
-
-## v2.19 stock-equivalent START/END writes
-
-Checked in software:
-- The chop worker now follows the stock UI call pattern: GET 31, SET 32 for START, and GET/SET 33 for absolute END.
-- Every generated END equals the following slice's START, including uneven divisions and an edited source START.
-- All host tests pass: 1,371 chop checks, 1,080 resampler cases, and the 308-million-output stress test.
-- The web patcher output is byte-identical to the native build.
-- Native output SHA-256: `05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
-
-Hardware result:
-- Failed: only the final destination retained a START marker. Parameter 32's interactive editor state is unsuitable for batch updates; v2.20 bypasses it.
-
-## v2.18 definite chop regions
-
-Checked in software:
-- Parameter 33 is supplied with each slice's length; Roland stores END as START + length.
-- Every generated END equals the following slice's START, including uneven divisions and sources with edited marks.
-- The host persistence mock now models the native relative-END behavior.
-- Native output SHA-256: `3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
-
-Hardware result:
-- Failed: END markers remained incorrect and the final chop became extremely short. This exposed the incorrect relative-END model; v2.19 replaces it with the stock editor's parameter path.
-
 ## v2.17 persistent destination count
 
 Checked in software:

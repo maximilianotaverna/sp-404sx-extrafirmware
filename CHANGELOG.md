@@ -1,39 +1,5 @@
 # Changelog
 
-## v2.20 (direct marker records)
-
-The version screen shows `2.20`. Expected patched-file SHA-256:
-`4bb403b5a21d4266e69c08d3e4fb03340663708c777817f84b9d700ea2cb6d20`.
-
-- Writes absolute START and END directly to each copied pad record at its native `+8` and `+12` fields.
-- Bypasses Roland's interactive START/END setters, whose shared editor state caused only the final v2.19 destination to retain a START marker.
-- Uses Roland's normal final PAD_INFO save after the complete batch.
-- Keeps GATE, varispeed, flexible 2–16 counts, and all processing feedback unchanged.
-
-## v2.19 (stock-equivalent START/END writes)
-
-The version screen shows `2.19`. Expected patched-file SHA-256:
-`05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
-
-- Matches Roland's START/END editor: read START with parameter 31, write START with parameter 32, and read/write absolute END with parameter 33.
-- Restores region division to `(END - START)`; this fixes v2.18's overrun and very short final chop.
-- Keeps every generated END equal to the following chop's START, including uneven divisions.
-- Corrects the host model so it no longer validates the disproven relative-END assumption.
-
-Hardware result: unsuccessful. Only the final destination retained a START marker, showing that parameter 32 carries shared interactive-editor state and is not safe for a multi-pad batch. Corrected in v2.20.
-
-## v2.18 (definite chop regions)
-
-The version screen shows `2.18`. Expected patched-file SHA-256:
-`3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
-
-- Corrects Roland parameter 33 handling: it is a region length relative to START, not an absolute END position.
-- Places every generated END exactly at the next chop's START instead of allowing later ends to clamp to the full sample end.
-- Divides the source's selected region length directly, including sources whose START marker was already moved.
-- Updates the persistence mock to reproduce Roland's relative-END semantics.
-
-Hardware result: unsuccessful. END markers were still incorrect and the last chop became extremely short. The relative-END interpretation was disproven and corrected in v2.19.
-
 ## v2.17 (persistent destination count)
 
 The version screen shows `2.17`. Expected patched-file SHA-256:

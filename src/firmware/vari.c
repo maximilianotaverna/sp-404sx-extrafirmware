@@ -824,13 +824,9 @@ CHR(chopone) static int chop_one(int (*fn)(void), int d, unsigned start, unsigne
     R_SET(61, d, -1, 0);
     r = fn();
     if (!(r & 0xFF)) {
-        volatile u32 *record = (volatile u32 *)(PADINFO + d * 32);
         vari_xset(d, speed);
-        /* The stock START/END setters carry interactive editor state and are
-           unsafe across a batch of pads.  The native record stores absolute
-           START and END at +8/+12; the final native save persists both. */
-        record[2] = start;
-        record[3] = end;
+        R_PADSET(31, start, d);
+        R_PADSET(33, end, d);
         R_PADSET(38, 1, d);
     }
     return r;
