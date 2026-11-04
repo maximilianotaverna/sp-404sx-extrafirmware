@@ -388,6 +388,11 @@ Implementation (vari.c "chromatic mode"):
   bytes; the 412-byte state handler occupies the verified-dead CPageTestVer methods 1..4 at 0x0C0CECC8..0x0C0CEEAF
   (488 bytes). Their four vtable slots are redirected to the page's return-zero method. The handler posts exactly
   one Roland native copy job through 0x0C0904C0(source, first); the hooked worker expands it into the armed batch.
+  Stock method 5 has five branches to two helpers in this block; method 5 is the separately reclaimed `chra`
+  region, so all five callers disappear in the patched image. Stock's CPageTestVer-only helper block (`chrw`)
+  plus method 0 (`chrl`) load their literal pools here; both are replaced in full and independently checked as
+  unreachable. Good Scoop v2.10 was checked separately and already has no surviving branch, literal load or
+  constructor dependency.
   Bank buttons A..E = ids 25..29 (play page: 0x0C0D0B10(id - 25)). On the play page CANCEL is only a modifier
   (Roland checks it held: 0x0C0BEA7C(34)); on the resample page id 34 has its own action (0x0C0CAA72).
 - Keys = pads 0..59 (banks A..E), semitones = pad - 24; banks F..J stock. MIDI: base channel notes 47..106 =

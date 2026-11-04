@@ -126,6 +126,12 @@ HELPER_BLOCK = ('chrw', (0x0C0CEC9E, 0x0C0CECA8, 0x0C0CECB4, 0x0C0CECB8, 0x0C0CE
 # The build checks that each span is dead like the area itself: no branch into it from outside, no pointer into it
 # except from a test page vtable, and no load of a test page vtable in it (a constructor, which runs at boot).
 POOL_SPANS = {'chrx': (0x0C0CD474, 0x0C0CD56C), 'chry': (0x0C0CDD88, 0x0C0CDEE4), 'chrz': (0x0C0CE0A0, 0x0C0CE280)}
+# Stock CPageTestVer method 5 calls two helpers inside chrt. Method 5 is chra and is itself replaced; Good Scoop
+# v2.10 therefore already has no surviving branches into chrt. Keep the exact stock source list as an assertion.
+DEAD_BRANCHES = {'chrt': ((0x0C0CEECA, 0x0C0CEEDE, 0x0C0CEEF8, 0x0C0CEF0A, 0x0C0CEF3A),
+                            (0x0C0CEEB0, 0x0C0CEF44))}
+DEAD_LOAD_SPANS = {'chrt': ((0x0C0CE860, 0x0C0CEC34),  # chrw: dead CPageTestVer-only helpers
+                            (0x0C0CEC38, 0x0C0CECC8))} # chrl: dead CPageTestVer method 0
 TEST_VTABLES = (0x0C12F6B0, 0x0C12F794, 0x0C1302E4, 0x0C12F880, 0x0C12F970, 0x0C12FA4C, 0x0C12FB28, 0x0C12FC14,
                 0x0C12FD08, 0x0C12FE00, 0x0C12FEDC, 0x0C130038, 0x0C130118, 0x0C1301F0)
 TEST_VT_AREA = (0x0C12F6B0, 0x0C130330)
@@ -345,7 +351,13 @@ def build(official):
             assert not [i for i in range(0, len(img) - 3, 4) if lo <= struct.unpack('>I', img[i:i + 4])[0] < hi], f'pointers into {n}'
             assert img[lo - BASE - 4:lo - BASE] == bytes.fromhex('0c0b f920') and img[lo - BASE:lo - BASE + 2] == bytes.fromhex('2f96'), f'{n} start'
             continue
-        assert not branches_into(img, lo, hi), f'something branches into {n}'
+        br = branches_into(img, lo, hi)
+        if n in DEAD_BRANCHES:
+            srcs, (s0, s1) = DEAD_BRANCHES[n]
+            assert sorted(int(a, 16) for a, t in br) == sorted(srcs), f'branches into {n}: {br}'
+            assert all(s0 <= a < s1 for a in srcs) and not [a for a in ctor_loads if s0 <= a < s1], f'{n} callers'
+        else:
+            assert not br, f'something branches into {n}'
         loads = const_loads_into(img, lo, hi, [(lo, hi)])
         if n in POOL_SPANS:
             s0, s1 = POOL_SPANS[n]
@@ -356,7 +368,12 @@ def build(official):
             assert all(TEST_VT_AREA[0] <= p < TEST_VT_AREA[1] for p in sp), f'pointers into the span of {n}: {sp}'
             assert img[hi - BASE:hi - BASE + 4] in (bytes(4), bytes.fromhex('e000 006b')) or hi + 4 == ret0, f'{n} end'
         else:
-            assert not loads, f'constant loads into {n}'
+            if n in DEAD_LOAD_SPANS:
+                spans = DEAD_LOAD_SPANS[n]
+                assert loads and all(any(s0 <= a < s1 for s0, s1 in spans) for a, t in loads), \
+                    f'constant loads into {n}: {loads}'
+            else:
+                assert not loads, f'constant loads into {n}'
             assert img[hi - BASE - 2:hi - BASE] == bytes.fromhex('006b') or \
                 img[hi - BASE - 4:hi - BASE] == bytes.fromhex('006b 0009'), f'{n} end'
         items = slot_items(slot, lo)
