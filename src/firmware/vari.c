@@ -824,11 +824,13 @@ CHR(chopone) static int chop_one(int (*fn)(void), int d, unsigned start, unsigne
     R_SET(61, d, -1, 0);
     r = fn();
     if (!(r & 0xFF)) {
+        volatile u32 *record = (volatile u32 *)(PADINFO + d * 32);
         vari_xset(d, speed);
-        /* Match the stock START/END editor exactly: it reads START through
-           parameter 31 but commits START through 32; END is absolute in 33. */
-        R_PADSET(32, start, d);
-        R_PADSET(33, end, d);
+        /* The stock START/END setters carry interactive editor state and are
+           unsafe across a batch of pads.  The native record stores absolute
+           START and END at +8/+12; the final native save persists both. */
+        record[2] = start;
+        record[3] = end;
         R_PADSET(38, 1, d);
     }
     return r;

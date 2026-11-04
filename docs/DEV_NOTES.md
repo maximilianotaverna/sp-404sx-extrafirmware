@@ -611,6 +611,18 @@ Hardware disproved this interpretation: markers remained incorrect and the last 
 - Output: 475392 bytes, MD5 `ef69d551ed5eedcd54c7d78219c0eba0`, SHA-256
   `05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
 
+Hardware showed that only the final destination retained a START marker. Parameter 32 therefore carries shared
+interactive-editor state and cannot safely commit a batch of different pads.
+
+## Test release v2.20 — direct marker records
+- The native 32-byte PAD_INFO record stores absolute START at `+8` and absolute END at `+12`. After each native
+  copy succeeds, the worker writes those two aligned fields directly instead of invoking marker parameters 31–33.
+- Roland's normal parameter 38 still enables GATE, and the existing final PAD_INFO save persists the completed batch.
+- The host test counts marker API calls and requires zero, while checking every stored START/END boundary directly.
+- No new code region is used; `chrx` remains 460 bytes in its existing 464-byte region.
+- Output: 475392 bytes, MD5 `00ff8ecbeac231322ea89c1e222e35a6`, SHA-256
+  `4bb403b5a21d4266e69c08d3e4fb03340663708c777817f84b9d700ea2cb6d20`.
+
 ## Test release v2.17 — persistent destination count
 - Hardware showed that merely leaving the chosen `Cxx` in the display buffer was insufficient: Roland's delayed
   play-page refresh restored the source sample number after roughly 1–2 seconds.

@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.20 (direct marker records)
+
+The version screen shows `2.20`. Expected patched-file SHA-256:
+`4bb403b5a21d4266e69c08d3e4fb03340663708c777817f84b9d700ea2cb6d20`.
+
+- Writes absolute START and END directly to each copied pad record at its native `+8` and `+12` fields.
+- Bypasses Roland's interactive START/END setters, whose shared editor state caused only the final v2.19 destination to retain a START marker.
+- Uses Roland's normal final PAD_INFO save after the complete batch.
+- Keeps GATE, varispeed, flexible 2–16 counts, and all processing feedback unchanged.
+
 ## v2.19 (stock-equivalent START/END writes)
 
 The version screen shows `2.19`. Expected patched-file SHA-256:
@@ -9,6 +19,8 @@ The version screen shows `2.19`. Expected patched-file SHA-256:
 - Restores region division to `(END - START)`; this fixes v2.18's overrun and very short final chop.
 - Keeps every generated END equal to the following chop's START, including uneven divisions.
 - Corrects the host model so it no longer validates the disproven relative-END assumption.
+
+Hardware result: unsuccessful. Only the final destination retained a START marker, showing that parameter 32 carries shared interactive-editor state and is not safe for a multi-pad batch. Corrected in v2.20.
 
 ## v2.18 (definite chop regions)
 

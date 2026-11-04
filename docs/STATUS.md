@@ -3,6 +3,18 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.20 direct marker records
+
+Checked in software:
+- Each destination's absolute START and END are written directly to PAD_INFO offsets `+8` and `+12` after its native copy succeeds.
+- The chop engine makes zero calls to interactive marker parameters 31–33; a regression counter enforces this.
+- Every generated END equals the following slice's START, including uneven divisions and an edited source START.
+- All host tests and the 308-million-output stress test pass; web and native patch outputs are byte-identical.
+- Native output SHA-256: `4bb403b5a21d4266e69c08d3e4fb03340663708c777817f84b9d700ea2cb6d20`.
+
+Awaiting hardware confirmation:
+- Confirm `2.20`, distinct START markers on every destination, and each END at the next chop's START.
+
 ## v2.19 stock-equivalent START/END writes
 
 Checked in software:
@@ -12,8 +24,8 @@ Checked in software:
 - The web patcher output is byte-identical to the native build.
 - Native output SHA-256: `05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
 
-Awaiting hardware confirmation:
-- Confirm `2.19`, distinct sequential regions, and that every END marker sits at the next chop's START.
+Hardware result:
+- Failed: only the final destination retained a START marker. Parameter 32's interactive editor state is unsuitable for batch updates; v2.20 bypasses it.
 
 ## v2.18 definite chop regions
 
