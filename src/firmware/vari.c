@@ -26,6 +26,9 @@ typedef unsigned int u32;
 #define R_SHOWN  ((void (*)(int n))0x0C0CFFF8)
 #define R_SHOWS  ((void (*)(const char *s, int f))0x0C0CFF84)
 #endif
+#ifndef R_SET
+#define R_SET    ((void (*)(int id, int value, int pad, int notify))0x0C082B98)
+#endif
 #ifndef SECT
 #define SECT(x) __attribute__((section(x)))
 #endif
@@ -77,6 +80,8 @@ struct ctab chr_tab SECT(".chrdata");
    menu (bank, source pad, last knob, open request); C.ON redraw request; unsaved-change timer; display text. */
 struct chr { unsigned char key[10], mkey[10], cur[10], pend, mb, mpad, mk, want, show, menu; volatile int dirty; char txt[4]; };
 struct chr chr_st SECT(".chrdata");
+struct chop_state { unsigned char active, source, first, count; };
+struct chop_state chop_st SECT(".chrdata");
 #define S0       64               /* semitone offset in pend / cur */
 #define S_MAX    35               /* highest semitone (just under 8x) */
 #define MODE_CHR 9                /* TIME/BPM page: chromatic menu */
@@ -645,6 +650,10 @@ int vari_fill(void *obj, s16 *L, s16 *R, int *flag, int *frames, fillfn orig) {
 #define R_CARDOK ((int  (*)(void))0x0C0EF484)
 #define PADINFO  ((const unsigned char *)0x0C179344)
 #endif
+#ifndef R_PADSET
+#define R_PADSET  ((void (*)(int id, int value, int pad))0x0C08F274)
+#define R_PADSAVE ((int  (*)(void))0x0C089DE4)
+#endif
 #ifndef PERSIST
 #define PERSIST __attribute__((section(".text.persist")))
 #endif
@@ -727,9 +736,53 @@ CHR(xset) static void vari_xset(int pad, int pos) {
     vari_tab.e[pad].fp = pad_fp(pad);
     vari_dirty_ms = 1;
 }
+/* Auto-slice state is armed by the UI before Roland posts its first ordinary copy job.  All destinations are
+   checked up front, so an occupied pad or source overlap cannot create a partial set. */
+CHR(chopcheck) int chop_arm(int source, int first, int count) {
+    int i;
+    if ((unsigned)source >= 120 || (unsigned)first >= 120 || count > 120 - first ||
+        (count != 4 && count != 8 && count != 12 && count != 16)) return 0;
+    for (i = 0; i < count; i++) {
+        int d = first + i;
+        if (d == source || *(const u32 *)(PADINFO + d * 32 + 4) > 512) return 0;
+    }
+    chop_st.source = (unsigned char)source;
+    chop_st.first = (unsigned char)first;
+    chop_st.count = (unsigned char)count;
+    chop_st.active = 1;
+    return 1;
+}
+CHR(chopbound) static unsigned chop_bound(unsigned start, unsigned end, unsigned count, unsigned i, unsigned quantum) {
+    unsigned units = R_DIV(end - start, quantum), base = R_DIV(units, count);
+    return start + (base * i + R_DIV((units - base * count) * i, count)) * quantum;
+}
+/* Runs in Roland's file task through xcopy_stub.  Every successful native worker call has already copied the
+   sample and saved PAD_INFO.  Marks are applied afterwards; one final native save commits the last update. */
+CHR(choprun) static int chop_run(int (*fn)(void)) {
+    int source = chop_st.source, first = chop_st.first, count = chop_st.count, i, r = 0;
+    unsigned start = R_GET(31, source), end = R_GET(33, source);
+    unsigned quantum = PADINFO[source * 32 + 22] == 2 ? 4 : 2;
+    unsigned minimum = quantum == 4 ? 0x1000 : 0x800;
+    int speed = vari_tab.e[source].pos;
+    chop_st.active = 0;
+    if (end <= start || R_DIV(end - start, count) < (int)minimum) return 1;
+    for (i = 0; i < count; i++) {
+        int d = first + i;
+        R_SET(60, source, -1, 0);
+        R_SET(61, d, -1, 0);
+        r = fn();
+        if (r & 0xFF) break;
+        vari_xset(d, speed);
+        R_PADSET(31, chop_bound(start, end, count, i, quantum), d);
+        R_PADSET(33, chop_bound(start, end, count, i + 1, quantum), d);
+    }
+    if (i) R_PADSAVE();
+    return r;
+}
 CHR(xop) int vari_xop(int (*fn)(void), int exch) {
     int p[2], i, r;
     s8 s[2];
+    if (!exch && chop_st.active) return chop_run(fn);
     for (i = 0; i < 2; i++) {
         p[i] = R_GET(60 + i, -1);
         if ((unsigned)p[i] >= 120) return fn();

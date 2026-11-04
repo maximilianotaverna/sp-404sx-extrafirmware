@@ -5,7 +5,7 @@
 #include <stdlib.h>
 static unsigned char padinfo[120*32];
 static unsigned char card[1024]; static int card_len=-1, writes=0, locks=0;
-static int p60=-1,p61=-1; static int g(int id,int pad){ return id==52?7:id==60?p60:id==61?p61:0; } static int pt(void){return 12000;}
+static int p60=-1,p61=-1; static int g(int id,int pad){ return id==52?7:id==60?p60:id==61?p61:id==31?(int)*(unsigned*)(padinfo+pad*32+8):id==33?(int)*(unsigned*)(padinfo+pad*32+12):0; } static int pt(void){return 12000;}
 static int dv(int a,int b){return a/b;}
 static void sn(int n){} static void ss(const char*s,int f){}
 static void lk(int n){ locks++; } static void ulk(int n){ locks--; }
@@ -15,8 +15,12 @@ static int op(const char*p,int m){ if(card_len<0) return -1; fd_mode=0; fd_pos=0
 static int rd(int fd,void*b,int n){ int k=card_len-fd_pos<n?card_len-fd_pos:n; memcpy(b,card+fd_pos,k); fd_pos+=k; return k; }
 static int wr(int fd,const void*b,int n){ memcpy(card,b,n); card_len=n; writes++; return n; }
 static void cl(int fd){ fd_mode=-1; } static int cardok(void){return 1;}
-static void st(int id,int v,int pad,int f){} static int evo(void*p,void*e){return 0;} static void dsp(void*p){}
+static void st(int id,int v,int pad,int f){(void)pad;(void)f;if(id==60)p60=v;if(id==61)p61=v;} static int marksaves;
+static void pset(int id,int v,int pad){if(id==31)*(unsigned*)(padinfo+pad*32+8)=v;if(id==33)*(unsigned*)(padinfo+pad*32+12)=v;}
+static int psave(void){marksaves++;return 0;} static int evo(void*p,void*e){return 0;} static void dsp(void*p){}
 #define R_SET st
+#define R_PADSET pset
+#define R_PADSAVE psave
 #define R_EVORIG(p,e) evo(p,e)
 #define R_DISP(p) dsp(p)
 static short knobs[3];
@@ -125,6 +129,21 @@ int main(){ vari_need_load=1;
     job_fail=0; p60=10; p61=10; vari_xop(job,0); CHECK(vari_tab.e[10].pos==5, "same pad: nothing moves");
     p60=-1; vari_xop(job,0); CHECK(vari_tab.e[10].pos==5, "bad params: nothing moves");
     int w0=writes; ticks(15); CHECK(writes>w0, "job result saved");
+  }
+  /* armed auto-slice reuses the same native copy worker in the file task */
+  {
+    setpad(20,0x10200,2); *(unsigned*)(padinfo+20*32+8)=0x200; *(unsigned*)(padinfo+20*32+12)=0x10200;
+    for(int p=21;p<25;p++) setpad(p,0,0); vari_tab.e[20].pos=-12; marksaves=0; job_mid=0;
+    CHECK(chop_arm(20,21,4)==1 && chop_st.active, "auto-slice arms after full destination preflight");
+    p60=20; p61=21; CHECK(vari_xop(job,0)==0 && !chop_st.active, "copy hook consumes armed auto-slice");
+    CHECK(marksaves==1, "auto-slice performs one final PAD_INFO mark save");
+    for(int i=0;i<4;i++){
+      CHECK(*(unsigned*)(padinfo+(21+i)*32+8)==0x200+i*0x4000, "auto-slice start boundary");
+      CHECK(*(unsigned*)(padinfo+(21+i)*32+12)==0x200+(i+1)*0x4000, "auto-slice end boundary");
+      CHECK(vari_tab.e[21+i].pos==-12, "auto-slice copies varispeed setting");
+    }
+    setpad(22,90000,2); CHECK(chop_arm(20,21,4)==0 && !chop_st.active, "occupied destination rejects whole batch");
+    setpad(22,0,0); CHECK(chop_arm(22,21,4)==0, "source overlap rejects whole batch");
   }
   /* any stored byte is a safe ratio index */
   for(int v=-128;v<128;v++){ vari_tab.e[0].pos=(s8)v; u32 r=pad_ratio(0); if(r<0x8000||r>0x18000){fails++;printf("bad ratio %d\n",v);} }
