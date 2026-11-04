@@ -113,6 +113,9 @@ EXTRA = (('midi', 0x0C0CDDDC, 0x0C0CDEBC, 0x0C12FD24, 0x0C0CE074),     # CPageTe
          ('chrs', 0x0C0CD474, 0x0C0CD4BC, 0x0C12F88C, 0x0C0CD740),     # CPageTestExtract method 0
          ('chru', 0x0C0CDC20, 0x0C0CDC70, 0x0C12FC20, 0x0C0CDD24),     # CPageTestMicInt method 0
          ('chrv', 0x0C0CD974, 0x0C0CD9B0, 0x0C12FA58, 0x0C0CDA6C),     # CPageTestLine method 0
+         ('chrt', 0x0C0CECC8, 0x0C0CEEB0,
+          ((0x0C13012C, 0x0C0CECC8), (0x0C130134, 0x0C0CECEC),
+           (0x0C13013C, 0x0C0CEDF8), (0x0C130144, 0x0C0CEE04)), 0x0C0CEF48), # Ver 1..4
          # helper functions after the CPageTestSw constructor (0x0C0CE838..0x0C0CE85F, live, kept), called only by
          # CPageTestVer methods; no vtable slot (see HELPER_BLOCK)
          ('chrw', 0x0C0CE860, 0x0C0CEC34, None, None))
@@ -126,6 +129,8 @@ POOL_SPANS = {'chrx': (0x0C0CD474, 0x0C0CD56C), 'chry': (0x0C0CDD88, 0x0C0CDEE4)
 TEST_VTABLES = (0x0C12F6B0, 0x0C12F794, 0x0C1302E4, 0x0C12F880, 0x0C12F970, 0x0C12FA4C, 0x0C12FB28, 0x0C12FC14,
                 0x0C12FD08, 0x0C12FE00, 0x0C12FEDC, 0x0C130038, 0x0C130118, 0x0C1301F0)
 TEST_VT_AREA = (0x0C12F6B0, 0x0C130330)
+def slot_items(slot, lo):
+    return slot if isinstance(slot, tuple) else ((slot, lo),)
 # Chromatic mode hooks: pointers through which Roland calls pad start / pad release, and the play page's
 # event vtable slot (pointer site, Roland function it held)
 REQ_PTR, REQ_FN, REQ_LOAD = 0x0C08948C, 0x0C093D28, 0x0C0892DE   # note handler -> play request (its own literal)
@@ -354,8 +359,10 @@ def build(official):
             assert not loads, f'constant loads into {n}'
             assert img[hi - BASE - 2:hi - BASE] == bytes.fromhex('006b') or \
                 img[hi - BASE - 4:hi - BASE] == bytes.fromhex('006b 0009'), f'{n} end'
+        items = slot_items(slot, lo)
         ptr = [BASE + i for i in range(0, len(img) - 3, 4) if lo <= struct.unpack('>I', img[i:i + 4])[0] < hi]
-        assert ptr == [slot] and u32(img, slot) == lo, f'pointers into {n}: {[hex(p) for p in ptr]}'
+        assert ptr == [p for p, old in items] and all(u32(img, p) == old for p, old in items), \
+            f'pointers into {n}: {[hex(p) for p in ptr]}'
         assert img[lo - BASE:lo - BASE + 2] == bytes.fromhex('4f22') and (img[lo - BASE - 2:lo - BASE] in
             (bytes.fromhex('0009'), bytes.fromhex('006b')) or lo - 2 in literal_pools(img)), f'{n} start'
         assert img[ret0 - BASE:ret0 - BASE + 4] == bytes.fromhex('e000 006b'), f'{n} return-0 method'
@@ -408,7 +415,8 @@ def build(official):
     put32(new, DEV_SLOT, DEV_METHOD, DEV_RET0)
     for n, lo, hi, slot, ret0 in EXTRA:
         new[lo - BASE:lo - BASE + len(extra[n])] = extra[n]
-        if slot is not None: put32(new, slot, lo, ret0)
+        if slot is not None:
+            for p, old in slot_items(slot, lo): put32(new, p, old, ret0)
     new[TEST_GATE - BASE:TEST_GATE - BASE + 2] = struct.pack('>H', TEST_GATE_NEW)
     assert img[LED_RANGE - BASE:LED_RANGE - BASE + 6] == LED_RANGE_OLD, 'TIME/BPM LED range check not found'
     new[LED_RANGE - BASE:LED_RANGE - BASE + 2] = struct.pack('>H', LED_RANGE_NEW)
@@ -499,7 +507,9 @@ def build(official):
                set(range(BOOTGAP - BASE, BOOTGAP - BASE + len(bootgap))) |
                set(range(LIGHTS - BASE, LIGHTS - BASE + len(lights))) |
                {a - BASE + k for a in LIGHTS_SLOTS for k in range(4)} |
-               {x - BASE for n, lo, hi, slot, ret0 in EXTRA for x in (*range(lo, lo + len(extra[n])), *(range(slot, slot + 4) if slot else ()))} | {TEST_GATE - BASE, TEST_GATE - BASE + 1, LED_RANGE - BASE + 1, REFRESH_RANGE - BASE + 1, LED_BLINK - BASE + 1} |
+               {x - BASE for n, lo, hi, slot, ret0 in EXTRA for x in (*range(lo, lo + len(extra[n])),
+                   *(y for p, old in (slot_items(slot, lo) if slot else ()) for y in range(p, p + 4)))} |
+               {TEST_GATE - BASE, TEST_GATE - BASE + 1, LED_RANGE - BASE + 1, REFRESH_RANGE - BASE + 1, LED_BLINK - BASE + 1} |
                {a - BASE + 1 for a, _, _ in VERSION_TEXT})
     assert set(diff) <= allowed, [hex(BASE + d) for d in diff if d not in allowed]
     info = dict(extra={n: len(b) for n, b in extra.items()}, dev=len(dev), cave=len(cave), dump=len(dump),

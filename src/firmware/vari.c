@@ -29,6 +29,9 @@ typedef unsigned int u32;
 #ifndef R_SET
 #define R_SET    ((void (*)(int id, int value, int pad, int notify))0x0C082B98)
 #endif
+#ifndef PADINFO
+#define PADINFO  ((const unsigned char *)0x0C179344)
+#endif
 #ifndef SECT
 #define SECT(x) __attribute__((section(x)))
 #endif
@@ -40,6 +43,9 @@ typedef unsigned int u32;
 #define MODE_VARI 8
 #define MAXV     12   /* SP-404SX polyphony; a voice numbered above this just plays at normal speed */
 #define BTN_BPM  40   /* TIME/BPM button: chromatic gesture; the only button whose stock handling differs between modes 7 and 8 */
+#define BTN_CANCEL 34
+#define BTN_REMAIN 35
+#define BTN_MARK   44
 #define UNITY    0x10000u
 
 struct page  { void *vt; int mode; int f8; int f12; };   /* f12 == 1: CTRL 2 shows the pattern tempo */
@@ -93,6 +99,7 @@ static const char chr_mon_s[] SECT(".rodata.chr") = "MON";
 static int chr_menu(struct page *p);
 static int chr_padkey(struct event *e);
 static unsigned char pad_fp(int pad);
+int chop_arm(int source, int first, int count);
 
 /* ------------------------------------------------------------------ speed + UI */
 #ifndef R_TEMPO
@@ -247,6 +254,7 @@ MIDI int vari_event(struct page *p, struct event *e) {
 #define REQOBJ    ((void *)0x0CCAE0C4)                                /* the note handler's play request object   */
 #define R_SMPKICK ((int  (*)(void))0x0C08FDDC)                        /* sampler armed (resample RDY): start it   */
 #define R_SETPAGE ((void (*)(void *mgr, int slot))0x0C0BE884)         /* show page `slot` (1 = play page)         */
+#define R_COPY    ((int  (*)(int source, int destination))0x0C0904C0) /* post Roland's ordinary pad-copy job      */
 #endif
 #define VT_PLAY  0x0C12E044u   /* CPagePlay vtable     */
 #define VT_EDIT  0x0C12F3F8u   /* CPageSmplEdit (TIME/BPM page) vtable */
@@ -400,10 +408,46 @@ CHR(padkey) int chr_holdget(int id, int pad, getfn orig) {
     if (b >= 0) pad = chr_tab.b[b].src - 1;
     return orig(id, pad);
 }
-/* Play page event hook: SHIFT + TIME/BPM asks the TIME/BPM page that Roland is about to open for the menu. */
+CHR(chopui) static int chop_ui(struct event *e) {
+    int n, first, source;
+    if (e->type == 0 && e->val) chr_st.want = e->id == BTN_BPM && R_HELD(BTN_SHIFT) && !FWDMODE;
+    if (!chop_st.active) {
+        if (e->type || !e->val || e->id != BTN_MARK || !R_HELD(BTN_REMAIN)) return 0;
+        source = R_GET(P_CURPAD, -1);
+        if ((unsigned)source >= 120 || *(const u32 *)(PADINFO + source * 32 + 4) <= 512) return 0;
+        chop_st.active = 2; chop_st.source = (unsigned char)source; chop_st.count = 4;
+        chr_st.txt[0] = 'C'; chr_st.txt[1] = '0'; chr_st.txt[2] = '4'; chr_st.txt[3] = 0;
+        R_MSG(chr_st.txt); return 1;
+    }
+    if (chop_st.active != 2) return 0;
+    if (e->type == 1 && e->id == 2) {
+        n = 4 + 4 * ((unsigned char)e->val >> 5);
+        if (n > 16) n = 16;
+        chop_st.count = (unsigned char)n;
+        chr_st.txt[0] = 'C'; chr_st.txt[1] = n > 9 ? '1' : '0';
+        chr_st.txt[2] = (char)('0' + n - (n > 9 ? 10 : 0)); chr_st.txt[3] = 0;
+        R_MSG(chr_st.txt); return 1;
+    }
+    if (e->type || !e->val) return 0;
+    if (e->id == BTN_CANCEL) {
+        chop_st.active = 0;
+        chr_st.txt[0] = 'C'; chr_st.txt[1] = 'A'; chr_st.txt[2] = 'N'; chr_st.txt[3] = 0;
+        R_MSG(chr_st.txt); return 1;
+    }
+    if (e->id < 1 || e->id > 12) return 0;
+    first = R_GET(P_BANK, -1) * 12 + e->id - 1;
+    if (chop_arm(chop_st.source, first, chop_st.count)) R_COPY(chop_st.source, first);
+    else {
+        chr_st.txt[0] = 'F'; chr_st.txt[1] = 'U'; chr_st.txt[2] = 'L'; chr_st.txt[3] = 0;
+        R_MSG(chr_st.txt);
+    }
+    return 1;
+}
+/* Play page event hook: SHIFT + TIME/BPM opens the chromatic menu. REMAIN + MARK selects an auto-slice source;
+   SHIFT + MARK remains Roland's stock shortcut. */
 typedef int (*evfn)(void *page, struct event *e);
 CHR(pageevent) int chr_page_event(void *page, struct event *e, evfn orig) {
-    if (e->type == 0 && e->val) chr_st.want = e->id == BTN_BPM && R_HELD(BTN_SHIFT) && !FWDMODE;
+    if (chop_ui(e)) return 1;
     return orig(page, e);
 }
 /* Play page enter and refresh hooks (UI task): C.ON when the bank shown is chromatic, drawn on the first refresh
@@ -648,7 +692,6 @@ int vari_fill(void *obj, s16 *L, s16 *R, int *flag, int *frames, fillfn orig) {
 #define R_WRITE  ((int  (*)(int, const void *, int))0x0C0D2B30)
 #define R_CLOSE  ((void (*)(int))0x0C0D2B8C)
 #define R_CARDOK ((int  (*)(void))0x0C0EF484)
-#define PADINFO  ((const unsigned char *)0x0C179344)
 #endif
 #ifndef R_PADSET
 #define R_PADSET  ((void (*)(int id, int value, int pad))0x0C08F274)
@@ -799,7 +842,7 @@ CHR(choprun) static int chop_run(int (*fn)(void)) {
 CHR(xop) int vari_xop(int (*fn)(void), int exch) {
     int p[2], i, r;
     s8 s[2];
-    if (!exch && chop_st.active) return chop_run(fn);
+    if (!exch && chop_st.active == 1) return chop_run(fn);
     for (i = 0; i < 2; i++) {
         p[i] = R_GET(60 + i, -1);
         if ((unsigned)p[i] >= 120) return fn();

@@ -379,6 +379,15 @@ Implementation (vari.c "chromatic mode"):
   the engine to 8x. Automatic jump to bank C not done (bank select 0x0C0D0B10 is tangled with A/F toggling
   and other state); the bank stays where it is.
 - Buttons: switch test order table 0x0C12FFC4 + CPageTestSw texts: 34 = CANCEL ("CAN", 0x0C130030), 35 = REMAIN.
+- Play-page control trace (2026-11-04): ID 44 is MARK. Its ordinary handler at 0x0C0C51B8 checks the audio
+  engine and restarts the current pad, matching MARK's documented behavior. SHIFT + MARK is not free: the early
+  branch at 0x0C0C4C8A calls 0x0C0BF210, so auto-slice must not replace it. REMAIN + MARK has no play-page
+  special-case and is the selected auto-slice entry gesture.
+- Auto-slice UI: REMAIN + MARK captures parameter 52 (current pad), CTRL 3 selects 4/8/12/16, bank buttons stay
+  stock, the next pad supplies `bank * 12 + id - 1`, and CANCEL (34) aborts. The compact play-page hook is 56
+  bytes; the 412-byte state handler occupies the verified-dead CPageTestVer methods 1..4 at 0x0C0CECC8..0x0C0CEEAF
+  (488 bytes). Their four vtable slots are redirected to the page's return-zero method. The handler posts exactly
+  one Roland native copy job through 0x0C0904C0(source, first); the hooked worker expands it into the armed batch.
   Bank buttons A..E = ids 25..29 (play page: 0x0C0D0B10(id - 25)). On the play page CANCEL is only a modifier
   (Roland checks it held: 0x0C0BEA7C(34)); on the resample page id 34 has its own action (0x0C0CAA72).
 - Keys = pads 0..59 (banks A..E), semitones = pad - 24; banks F..J stock. MIDI: base channel notes 47..106 =

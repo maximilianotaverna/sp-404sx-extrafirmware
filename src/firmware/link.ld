@@ -31,6 +31,7 @@ MEMORY {
   chrs (rx)  : ORIGIN = 0x0C0CD474, LENGTH = 0x48   /* CPageTestExtract method 0   */
   chru (rx)  : ORIGIN = 0x0C0CDC20, LENGTH = 0x50   /* CPageTestMicInt method 0    */
   chrv (rx)  : ORIGIN = 0x0C0CD974, LENGTH = 0x3C   /* CPageTestLine method 0      */
+  chrt (rx)  : ORIGIN = 0x0C0CECC8, LENGTH = 0x1E8  /* CPageTestVer methods 1..4   */
   chrx (rx)  : ORIGIN = 0x0C0CD56C, LENGTH = 0x1D0  /* CPageTestExtract method 5   */
   chry (rx)  : ORIGIN = 0x0C0CDEE4, LENGTH = 0x18C  /* CPageTestMidi method 5      */
   chrz (rx)  : ORIGIN = 0x0C0CE280, LENGTH = 0x120  /* CPageTestMute method 5      */
@@ -64,6 +65,7 @@ SECTIONS {
   .chrs : { *(.text.chrrelease) . = ALIGN(4); } > chrs
   .chru : { *(.text.chrfree) . = ALIGN(4); } > chru
   .chrv : { *(.text.chrpageenter) . = ALIGN(4); } > chrv
+  .chrt : { *(.text.chrchopui) . = ALIGN(4); } > chrt
   .chrx : { *(.text.chropen) *(.text.chrload) *(.text.chrchopone) . = ALIGN(4); } > chrx
   .chry : { *(.text.chrnote) *(.text.chrcheck) . = ALIGN(4); } > chry
   .chrz : { *(.text.chrknob) *(.text.chrxset) . = ALIGN(4); } > chrz

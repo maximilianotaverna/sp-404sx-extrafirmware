@@ -56,6 +56,7 @@ static int orig_note(unsigned char *ev){ orig_notes++; memcpy(orig_ev,ev,4); ret
 static int midi(int ch, int n, int vel){ unsigned char ev[4]={(unsigned char)n,3,(unsigned char)ch,(unsigned char)vel}; return chr_note(ev,orig_note); }
 static int pevs; static int pev_orig(void *page, struct event *e){ pevs++; return 0; }
 static void play_btn(int id, int val){ struct event e={0,(unsigned char)id,(signed char)val}; mock_page[0]=VT_PLAY; chr_page_event(0,&e,pev_orig); }
+static int play_ev(int type, int id, int val){ struct event e={type,(unsigned char)id,(signed char)val}; mock_page[0]=VT_PLAY; return chr_page_event(0,&e,pev_orig); }
 static struct page tp;                                      /* the TIME/BPM page */
 static int edit_ev(int type, int id, int val){ struct event e={type,(unsigned char)id,(signed char)val}; mock_page[0]=VT_EDIT; return vari_ev(&tp,&e); }
 static void edit_draw(void){ mock_page[0]=VT_EDIT; shs=0; vari_display(&tp); }
@@ -81,6 +82,13 @@ int main(){
   mock_shift=1; mock_fwdmode=1; play_btn(40,1); CHECK(chr_st.want==0, "FWD mode: Roland's SHIFT + TIME/BPM untouched");
   mock_fwdmode=0; pevs=0; play_btn(40,1); CHECK(chr_st.want==1 && pevs==1, "SHIFT + TIME/BPM: menu asked, Roland still opens the TIME/BPM page");
   play_btn(5,1); CHECK(chr_st.want==0, "any other button press cancels the request (page didn't open)");
+  mock_remain=1; CHECK(play_ev(0,44,1)==1 && chop_st.active==2 && chop_st.source==26 && chop_st.count==4 && !strcmp(mock_msg,"C04"),
+                       "REMAIN + MARK: current source and four slices");
+  mock_remain=0; CHECK(play_ev(1,2,70)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
+  mock_bank=4; CHECK(play_ev(0,3,1)==1 && mock_copies==1 && mock_copy_source==26 && mock_copy_first==50 && chop_st.active==1,
+                     "destination pad: arm batch and post one native copy job");
+  chop_st.active=0; mock_bank=2; mock_remain=1; play_ev(0,44,1); mock_remain=0;
+  CHECK(play_ev(0,34,1)==1 && chop_st.active==0 && !strcmp(mock_msg,"CAN") && mock_copies==1, "CANCEL: leave without copying");
   mock_shift=0; mock_midich=0; open_menu(26);
   CHECK(tp.mode==MODE_CHR && chr_tab.b[2].src==27 && chr_tab.b[2].ch==2 && chr_tab.b[2].mode==2 && chr_st.dirty,
         "menu for C3: bank C on, source C3, MIDI channel 3 (SP uses 1 and 2), mono, octave 0");
