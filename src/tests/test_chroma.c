@@ -63,7 +63,7 @@ static void edit_draw(void){ mock_page[0]=VT_EDIT; shs=0; vari_display(&tp); }
 /* SHIFT + TIME/BPM on the play page, then the TIME/BPM page Roland opens draws for the first time */
 static void open_menu(int curpad){ mock_cur=curpad; mock_shift=1; play_btn(40,1); mock_shift=0; tp.mode=5; edit_draw(); }
 static void setfp(int pad, unsigned end){ *(unsigned*)(padinfo+pad*32+4)=end; mock_loaded[pad]=end>512; }
-static int pgcalls; static int mock_pg(void *page){ pgcalls++; return 5; }   /* Roland's enter / refresh */
+static int pgcalls; static int mock_pg(void *page){ pgcalls++; mock_msg="027"; return 5; } /* stock refresh redraws current sample */
 static int gate_answer, gate_calls; static int mock_gate_fn(void){ gate_calls++; return gate_answer; }   /* Roland's MIDI note gate */
 static int gate(int kind, int ch, int n){ unsigned char ev[4]={(unsigned char)n,(unsigned char)kind,(unsigned char)ch,100}; return chr_gate(ev,mock_gate_fn); }
 static const char *CPATH = "/ROLAND/SP-404SX/SMPL/CHROMA.BIN";

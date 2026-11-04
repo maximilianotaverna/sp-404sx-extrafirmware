@@ -3,6 +3,17 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.17 persistent destination count
+
+Checked in software:
+- While destination selection is active, every play-page refresh restores the selected `Cxx` after Roland redraws the current sample number.
+- The host UI test now simulates that stock overwrite and verifies that `Cxx` wins.
+- GATE = 1, persistent `ChP`, final `don`, failure `Err`, and the 2–16 count range are unchanged.
+- Native output SHA-256: `505108d89b2be42d1fac772c8b04bef22052f8dd087bf09a539c503f8649f714`.
+
+Awaiting hardware confirmation:
+- Confirm `2.17` and that `Cxx` remains visible indefinitely until the destination pad is pressed.
+
 ## v2.16 stable count display and gated chops
 
 Checked in software:

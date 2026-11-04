@@ -421,11 +421,11 @@ CHR(chopdone) static void chop_done_feedback(int state) {
 }
 CHR(choprefresh) static void chop_refresh(void) {
     int state = chop_st.active;
-    if (state == 1) R_MSG(chop_run_s);
-    else if (state >= 3) {
+    if (state >= 3) {
         chop_st.active = 0;
         chop_done_feedback(state);
     }
+    else if (state) R_MSG(state == 1 ? chop_run_s : chr_st.txt);
 }
 CHR(chopui) static int chop_ui(struct event *e) {
     int n, first, source;

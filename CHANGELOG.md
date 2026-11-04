@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.17 (persistent destination count)
+
+The version screen shows `2.17`. Expected patched-file SHA-256:
+`505108d89b2be42d1fac772c8b04bef22052f8dd087bf09a539c503f8649f714`.
+
+- Continuously restores the selected `C02`–`C16` after Roland's normal play-page refresh, so the count remains visible until the destination pad is pressed.
+- Adds a regression test in which the stock refresh deliberately redraws the source sample number before the chop UI restores `Cxx`.
+- Keeps gated destinations and all v2.16 processing feedback unchanged.
+
 ## v2.16 (stable count display and gated chops)
 
 The version screen shows `2.16`. Expected patched-file SHA-256:

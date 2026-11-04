@@ -584,6 +584,16 @@ Implementation (vari.c "chromatic mode"):
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
 
+## Test release v2.17 — persistent destination count
+- Hardware showed that merely leaving the chosen `Cxx` in the display buffer was insufficient: Roland's delayed
+  play-page refresh restored the source sample number after roughly 1–2 seconds.
+- While chop state 2 is active, the hooked play-page refresh now redraws `chr_st.txt` after the original refresh,
+  continuously restoring the chosen `C02`–`C16` until the destination pad is pressed.
+- The host refresh mock deliberately writes a sample number first, preventing the prior false-positive test.
+- The optimized refresh logic fits exactly in the existing 0x1E8-byte CPageTestVer region; no new region is reclaimed.
+- Output: 475392 bytes, MD5 `6ee358c52a89cfb1ad02b65812c8727a`, SHA-256
+  `505108d89b2be42d1fac772c8b04bef22052f8dd087bf09a539c503f8649f714`.
+
 ## Test release v2.16 — stable count display and gated chops
 - The immediate `Pad` refresh is removed because hardware showed it replacing `Cxx` before the user could read
   the chosen count. A true delayed prompt would require another timing state/code region, so the safer behavior
