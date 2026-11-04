@@ -107,12 +107,23 @@ chromatic.
 - The file is written at the same times Roland saves its own pad settings, and never while sampling or
   during card operations.
 
+## Auto-slice / chop
+
+1. Play the loaded source pad.
+2. Hold **REMAIN** and press **MARK**. `C04` appears.
+3. Turn **CTRL 3** to choose `C04`, `C08`, `C12` or `C16`.
+4. Change bank if needed, then press the first empty destination pad.
+
+The firmware copies the source to consecutive pads and gives each copy one equal section using its start/end
+marks. The source is unchanged. All destination pads must be empty and the source cannot be in that range. If
+`FUL` appears, press **CANCEL** and choose another destination. CANCEL before choosing a pad exits without copying.
+
 ## What else changes
 
 - Roland's **factory hardware-test mode** (the technician test screens started from a test file on the card
   or a key combination at power-on) is removed to make room for the new code. Nothing a player uses
   depends on it. Installing Roland's original update brings it back.
-- The **power-on version display** (hold MARK) shows `2.10` instead of `1.07`.
+- The **power-on version display** (hold MARK) shows `2.11` instead of `1.07`.
 
 ## Limits and notes
 

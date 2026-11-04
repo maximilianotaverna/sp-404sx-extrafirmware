@@ -563,3 +563,14 @@ Implementation (vari.c "chromatic mode"):
 - Checks: host tests; patch.py output identical to the build; the web patcher's code (patcher-core.js + patch
   data) run in JavaScriptCore (no Node on this machine; same checks as check_web_patch.js): official file
   accepted, result byte-identical with the release hash, patched file recognised, modified input refused.
+
+## Test release v2.11 — sample chop
+- The displayed fork version changes to `2.11` so testers can distinguish this build from Good Scoop v2.10;
+  Roland's underlying updater version stays 1.07.
+- REMAIN + MARK opens auto-slice for the last played pad. CTRL 3 selects 4/8/12/16 slices, bank plus pad chooses
+  the first destination, MARK confirms, CANCEL exits, and `FUL` rejects an unavailable complete run.
+- The UI handler uses the verified disabled factory-test region; LIGHTS remains exactly full and untouched.
+- Build output: 475312 bytes, MD5 `e4a88266bea7e2888b54171640750913`, SHA-256
+  `658445118e825f13da4e8014a921e29d1003cdaef2b1a132ff67d067a084fd80`.
+- Native build, Python patcher and browser patcher are byte-identical. Host UI, chop, resampler, persistence,
+  chromatic and sanitizer stress tests pass. Hardware confirmation is still pending.

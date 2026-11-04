@@ -1,5 +1,18 @@
 # Changelog
 
+## v2.11 (sample-chop test release)
+
+The version screen shows `2.11`. Expected patched-file SHA-256:
+`658445118e825f13da4e8014a921e29d1003cdaef2b1a132ff67d067a084fd80`.
+
+- Adds auto-slice/chop: play a source pad, hold REMAIN and press MARK, choose 4/8/12/16 slices with CTRL 3,
+  choose the destination bank and first pad, then press MARK to create the consecutive chopped pads.
+- Checks the complete destination range before copying; `FUL` means the requested run will not fit or is not
+  available. CANCEL exits without changing pads.
+- Retains the v2.10 chromatic, resampling, copy/exchange and varispeed features.
+- This is a hardware-test release. The patcher source and reverse-engineering notes are public; no firmware
+  binary is stored in the repository.
+
 ## v2.10
 
 The version screen shows `2.10`. Output `sp404sx_up.bin` SHA-256

@@ -3,11 +3,11 @@
 **SP-404SX/A EXTRAfirmware** is custom system firmware for the **Roland SP-404SX and SP-404A**. The two are
 the same instrument in a different case and run the same firmware, so it works on both in exactly the same
 way. It adds tape-style **varispeed** to every pad (pitch and tempo change together, like speeding up or
-slowing down a tape or a turntable) and a **chromatic mode** that turns a bank into a keyboard for one of its
-samples, playable from the pads and over MIDI.
+slowing down a tape or a turntable), a **chromatic mode** that turns a bank into a keyboard, and **auto-slice**
+that divides a sample across 4, 8, 12 or 16 consecutive pads.
 
-> **Current release: v2.10** (the version screen shows `2.10`), based on Roland's system 1.07.
-> Output file: `sp404sx_up.bin`, SHA-256 `733885e5935d0c2c4c887f0446afa8e2546d2520223cec7ccbe9297c08066b54`.
+> **Current sample-chop test release: v2.11** (the version screen shows `2.11`), based on Roland's system 1.07.
+> Output SHA-256: `658445118e825f13da4e8014a921e29d1003cdaef2b1a132ff67d067a084fd80`.
 
 ## What it adds
 
@@ -52,6 +52,17 @@ sample at its own pitch, each next pad one semitone higher. A menu opens (TIME/B
 
 Full details: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 
+### Auto-slice / chop
+
+1. Play the loaded pad you want to slice.
+2. Hold **REMAIN** and press **MARK**. The display shows `C04`.
+3. Turn **CTRL 3** to select `C04`, `C08`, `C12` or `C16`.
+4. Select the destination bank normally, then press the first empty destination pad.
+
+The source is copied to consecutive pads with evenly divided start/end marks. Every destination must be empty
+and the source cannot be inside the destination range. `FUL` means the range is unavailable; press **CANCEL**
+and choose another. CANCEL also exits before a destination is chosen.
+
 ## How to install
 
 This repository contains **no Roland code**. You make the firmware file from Roland's own update:
@@ -60,7 +71,7 @@ This repository contains **no Roland code**. You make the firmware file from Rol
    [Roland's support page](https://www.roland.com/us/support/by_product/sp-404sx/updates_drivers/39ba2f11-6740-46d0-9286-0229f3c71bf7/)
    and unzip it to get `sp404sx_up.bin` (the SP-404A uses this same file).
 2. Turn it into the EXTRAfirmware file (either way gives the identical file):
-   - **In the browser (easiest):** open the [web patcher](https://good-scoop-labs.github.io/sp-404sx-extrafirmware/)
+   - **In the browser (easiest):** open the [sample-chop web patcher](https://maximilianotaverna.github.io/sp-404sx-extrafirmware/)
      and drop the file onto it. Nothing is uploaded; it all runs in the page.
    - **With Python 3.8+** (no packages needed):
      ```

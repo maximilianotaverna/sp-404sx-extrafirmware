@@ -3,6 +3,22 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.11 sample-chop test release
+
+Checked in software:
+- Displayed fork version is `2.11`; Roland's underlying updater version remains 1.07.
+- Auto-slice UI and native batch-copy/mark planner are covered by host tests.
+- The Python patcher, browser patcher and native builder produce byte-identical output with SHA-256
+  `658445118e825f13da4e8014a921e29d1003cdaef2b1a132ff67d067a084fd80`.
+- The reused factory-test region fits with 76 bytes free; the LIGHTS region remains sealed and unchanged.
+
+Awaiting hardware confirmation:
+- Hold MARK during power-on and confirm the display says `2.11`.
+- Play a sample, then hold REMAIN and press MARK; confirm `C04` appears.
+- Confirm CTRL 3 selects 4/8/12/16, destination selection works across banks, CANCEL exits safely, and `FUL`
+  appears when the complete destination run is unavailable.
+- Confirm the created pads contain consecutive slices and existing v2.10 features still work.
+
 ## v2.10
 
 Confirmed on hardware (test builds E1 … v2.10c):
