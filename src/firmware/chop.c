@@ -2,7 +2,7 @@
 #ifndef CHOP_DIV
 #define CHOP_DIV(a,b) ((unsigned)((int(*)(int,int))0x0C0F48AC)((int)(a),(int)(b)))
 #endif
-static int chop_count_ok(unsigned n){return n==4||n==8||n==12||n==16;}
+static int chop_count_ok(unsigned n){return n>=2&&n<=16;}
 int chop_plan_even(unsigned start,unsigned end,unsigned slices,unsigned quantum,unsigned minimum,unsigned*out){
  unsigned span,units,base,rem;if(!chop_count_ok(slices))return CHOP_PLAN_BAD_COUNT;if(end<=start)return CHOP_PLAN_BAD_RANGE;
  if((quantum!=2&&quantum!=4)||((start|end|minimum)&(quantum-1)))return CHOP_PLAN_BAD_QUANTUM;

@@ -3,6 +3,18 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.15 destination prompt and flexible slice count
+
+Checked in software:
+- `C04` remains the default; CTRL 3 selects every count from `C02` through `C16`.
+- `Pad` prompts for the first destination pad.
+- `ChP` is redrawn throughout processing, then changes to `don`; `Err` remains the failure message.
+- Per-destination numbers and pad flashing are deliberately deferred.
+- Native output SHA-256: `2062c7d953f75ee1621a8b83d2a6d4375820e2db7f6416ec0aa17804118e5e54`.
+
+Awaiting hardware confirmation:
+- Confirm `2.15`, the full 2–16 CTRL 3 range, `Pad`, persistent `ChP`, and final `don`.
+
 ## v2.14 processing feedback
 
 Checked in software:
@@ -55,7 +67,7 @@ Checked in software:
 Awaiting hardware confirmation:
 - Hold MARK during power-on and confirm the display says `2.11`.
 - Play a sample, then hold REMAIN and press MARK; confirm `C04` appears.
-- Confirm CTRL 3 selects 4/8/12/16, destination selection works across banks, CANCEL exits safely, and `FUL`
+- Confirm CTRL 3 selects 2–16, destination selection works across banks, CANCEL exits safely, and `FUL`
   appears when the complete destination run is unavailable.
 - Confirm the created pads contain consecutive slices and existing v2.10 features still work.
 

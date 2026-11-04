@@ -111,8 +111,8 @@ chromatic.
 
 1. Play the loaded source pad.
 2. Hold **CANCEL** and press **MARK**. `C04` appears.
-3. Turn **CTRL 3** to choose `C04`, `C08`, `C12` or `C16`.
-4. Change bank if needed, then press the first empty destination pad.
+3. Turn **CTRL 3** to choose any count from `C02` through `C16`; it starts at `C04`.
+4. When `Pad` appears, change bank if needed, then press the first empty destination pad.
 
 The display shows `ChP` and MARK blinks while the batch is processed. Wait until `don` appears and MARK stops
 blinking before using the new pads. `Err` means the batch failed.
@@ -126,7 +126,7 @@ marks. The source is unchanged. All destination pads must be empty and the sourc
 - Roland's **factory hardware-test mode** (the technician test screens started from a test file on the card
   or a key combination at power-on) is removed to make room for the new code. Nothing a player uses
   depends on it. Installing Roland's original update brings it back.
-- The **power-on version display** (hold MARK) shows `2.14` instead of `1.07`.
+- The **power-on version display** (hold MARK) shows `2.15` instead of `1.07`.
 
 ## Limits and notes
 

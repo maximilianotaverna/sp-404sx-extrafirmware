@@ -84,10 +84,18 @@ int main(){
   play_btn(5,1); CHECK(chr_st.want==0, "any other button press cancels the request (page didn't open)");
   mock_cancel=1; CHECK(play_ev(0,36,1)==1 && chop_st.active==2 && chop_st.source==26 && chop_st.count==4 && !strcmp(mock_msg,"C04"),
                        "CANCEL + MARK: current source and four slices");
-  mock_cancel=0; CHECK(play_ev(1,2,70)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
+  mock_cancel=0; chr_page_refresh(0,mock_pg); chr_page_refresh(0,mock_pg);
+  CHECK(chop_st.active==2 && !strcmp(mock_msg,"Pad"), "destination prompt: show Pad until a destination is pressed");
+  CHECK(play_ev(1,2,0)==1 && chop_st.count==2 && !strcmp(mock_msg,"C02"), "CTRL 3 left: select two slices");
+  CHECK(play_ev(1,2,90)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
+  CHECK(play_ev(1,2,127)==1 && chop_st.count==16 && !strcmp(mock_msg,"C16"), "CTRL 3 right: select 16 slices");
+  play_ev(1,2,90);
   mock_bank=4; CHECK(play_ev(0,3,1)==1 && mock_copies==1 && mock_copy_source==26 && mock_copy_first==50 && chop_st.active==1 &&
                      !strcmp(mock_msg,"ChP") && mock_led_id==13 && mock_led_value==2,
                      "destination pad: show ChP, blink MARK, arm batch and post one native copy job");
+  chr_page_refresh(0,mock_pg);
+  CHECK(chop_st.active==1 && !strcmp(mock_msg,"ChP") && mock_led_value==2,
+        "processing refresh: keep ChP visible while the batch is active");
   chop_st.active=3; chr_page_refresh(0,mock_pg);
   CHECK(chop_st.active==0 && !strcmp(mock_msg,"don") && mock_led_id==13 && mock_led_value==0,
         "UI refresh: show completion and stop MARK blink");

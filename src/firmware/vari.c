@@ -98,6 +98,7 @@ static const char chr_mon_s[] SECT(".rodata.chr") = "MON";
 static const char chop_run_s[] SECT(".rodata.chr") = "ChP";
 static const char chop_done_s[] SECT(".rodata.chr") = "don";
 static const char chop_err_s[] SECT(".rodata.chr") = "Err";
+static const char chop_pad_s[] SECT(".rodata.chr") = "Pad";
 static int chr_menu(struct page *p);
 static int chr_padkey(struct event *e);
 static unsigned char pad_fp(int pad);
@@ -421,7 +422,10 @@ CHR(chopdone) static void chop_done_feedback(int state) {
 }
 CHR(choprefresh) static void chop_refresh(void) {
     int state = chop_st.active;
-    if (state >= 3) {
+    if (!state) return;
+    if (state == 1) R_MSG(chop_run_s);
+    else if (state == 2) R_MSG(chop_pad_s);
+    else {
         chop_st.active = 0;
         chop_done_feedback(state);
     }
@@ -439,8 +443,7 @@ CHR(chopui) static int chop_ui(struct event *e) {
     }
     if (chop_st.active != 2) return 0;
     if (e->type == 1 && e->id == 2) {
-        n = 4 + 4 * ((unsigned char)e->val >> 5);
-        if (n > 16) n = 16;
+        n = 2 + (((unsigned char)e->val * 15) >> 7);
         chop_st.count = (unsigned char)n;
         chr_st.txt[0] = 'C'; chr_st.txt[1] = n > 9 ? '1' : '0';
         chr_st.txt[2] = (char)('0' + n - (n > 9 ? 10 : 0)); chr_st.txt[3] = 0;
@@ -481,12 +484,12 @@ CHR(pageenter) int chr_page_enter(void *page, pgfn orig) {
 }
 CHR(pagerefres) int chr_page_refresh(void *page, pgfn orig) {
     int r = orig(page), b;
-    chop_refresh();
     if (chr_st.show) {
         b = R_GET(P_BANK, -1);
         if (b >= 0 && b < 10 && chr_tab.b[b].src) R_MSG(chr_on_s);
     }
     chr_st.show = 0;
+    chop_refresh();
     return r;
 }
 
@@ -806,7 +809,7 @@ CHR(chopcheck) int chop_arm(int source, int first, int count) {
     int i;
     const unsigned char *p;
     if ((unsigned)source >= 120 || (unsigned)first >= 120 || count > 120 - first ||
-        count < 4 || count > 16 || (count & 3)) return 0;
+        count < 2 || count > 16) return 0;
     if (source >= first && source < first + count) return 0;
     p = PADINFO + first * 32 + 4;
     for (i = 0; i < count; i++) {

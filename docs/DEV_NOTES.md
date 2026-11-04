@@ -584,6 +584,16 @@ Implementation (vari.c "chromatic mode"):
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
 
+## Test release v2.15 — destination prompt and flexible count
+- CTRL 3 maps its full 0..127 range to every integer slice count from 2 through 16; the initial count remains 4.
+- `Pad` is redrawn by the play-page refresh while the destination selector is active. `ChP` is likewise redrawn
+  on every refresh while the file-task batch is active, so stock page drawing cannot leave a stale message.
+- The generic even-boundary planner and firmware preflight now accept every count from 2 through 16. Host tests
+  cover all 15 counts. Per-destination numbers and destination-pad flashing remain future alternatives.
+- The added UI path fits exactly in the existing 0x1E8-byte CPageTestVer region; no new region is reclaimed.
+- Output: 475392 bytes, MD5 `f026c2aceb355025e147b7c186cd1bad`, SHA-256
+  `2062c7d953f75ee1621a8b83d2a6d4375820e2db7f6416ec0aa17804118e5e54`.
+
 ## Test release v2.14 — auto-slice processing feedback
 - Hardware confirmed that v2.13 opens with CANCEL + MARK and completes the auto-slice batch.
 - After a valid destination is chosen, the UI shows `ChP` and sets MARK LED 13 to the stock blink value 2.

@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.15 (destination prompt and flexible slice count)
+
+The version screen shows `2.15`. Expected patched-file SHA-256:
+`2062c7d953f75ee1621a8b83d2a6d4375820e2db7f6416ec0aa17804118e5e54`.
+
+- CTRL 3 now selects every slice count from 2 through 16, with 4 still the default.
+- Shows `Pad` until the first destination pad is pressed.
+- Keeps `ChP` visible for the complete copy/mark batch, then shows `don`.
+- Leaves per-pad progress numbers and destination-pad flashing for a future alternative.
+
 ## v2.14 (auto-slice processing feedback)
 
 The version screen shows `2.14`. Expected patched-file SHA-256:
