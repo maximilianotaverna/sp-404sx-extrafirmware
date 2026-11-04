@@ -3,6 +3,19 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.12 sample-chop hardware fix
+
+Checked in software:
+- Hooks both the Play page and Roland's dedicated Remain page, so the MARK press following REMAIN reaches the
+  chop UI. The original Remain-page handler still runs for events the chop UI does not consume.
+- Native build, Python patcher and browser patcher are byte-identical. Output SHA-256:
+  `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
+- All host UI, resampler, persistence, chromatic, chop and stress tests pass.
+
+Awaiting hardware confirmation:
+- Hold MARK during power-on and confirm `2.12`, then play a loaded sample and press REMAIN followed by MARK;
+  `C04` should appear.
+
 ## v2.11 sample-chop test release
 
 Checked in software:

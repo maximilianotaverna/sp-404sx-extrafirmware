@@ -6,8 +6,8 @@ way. It adds tape-style **varispeed** to every pad (pitch and tempo change toget
 slowing down a tape or a turntable), a **chromatic mode** that turns a bank into a keyboard, and **auto-slice**
 that divides a sample across 4, 8, 12 or 16 consecutive pads.
 
-> **Current sample-chop test release: v2.11** (the version screen shows `2.11`), based on Roland's system 1.07.
-> Output SHA-256: `658445118e825f13da4e8014a921e29d1003cdaef2b1a132ff67d067a084fd80`.
+> **Current sample-chop test release: v2.12** (the version screen shows `2.12`), based on Roland's system 1.07.
+> Output SHA-256: `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 
 ## What it adds
 

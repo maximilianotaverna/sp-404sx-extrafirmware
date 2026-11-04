@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.12 (sample-chop hardware fix)
+
+The version screen shows `2.12`. Expected patched-file SHA-256:
+`c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
+
+- Fixes REMAIN + MARK on hardware. Stock firmware switches to its dedicated Remain page as soon as REMAIN is
+  pressed; v2.11 only watched the Play page, so it never received the later MARK event. v2.12 also hooks the
+  Remain page while preserving its normal handler.
+- No changes to the slice planner, copy worker, LIGHTS region or existing v2.10 features.
+
 ## v2.11 (sample-chop test release)
 
 The version screen shows `2.11`. Expected patched-file SHA-256:

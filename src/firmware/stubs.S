@@ -176,6 +176,11 @@ pev_stub:                        /* play page event */
         mov.l   .Lc_pev,r0
         bra     6f
         nop
+rem_stub:                        /* REMAIN page event (REMAIN press changes pages before MARK arrives) */
+        mov.l   .Lrem_orig,r6
+        mov.l   .Lc_pev,r0
+        bra     6f
+        nop
 note_stub:                       /* note handler (event) */
         mov.l   .Lnote_orig,r5
         mov.l   .Lc_note,r0
@@ -231,6 +236,7 @@ pref_stub:                       /* play page refresh: Roland's refresh, then C.
 chr_lits2:
 .Lc_pev:        .long chr_page_event
 .Lpev_orig:     .long 0x0C0C5384
+.Lrem_orig:     .long 0x0C0CA404
 .Lc_note:       .long chr_note
 .Lnote_orig:    .long 0x0C089330
 .Lc_gate:       .long chr_gate
@@ -246,6 +252,6 @@ chr_lits2:
 .Lxcopy_orig:   .long 0x0C087A64
 .Lxexch_orig:   .long 0x0C087DEC
 chr_lits2_end:
-        .global req_stub, play_stub, rel_stub, pev_stub, note_stub, gate_stub, gate2_stub, hold_stub, pen_stub, pref_stub
+        .global req_stub, play_stub, rel_stub, pev_stub, rem_stub, note_stub, gate_stub, gate2_stub, hold_stub, pen_stub, pref_stub
         .global xcopy_stub, xexch_stub
         .global chr_lits, chr_lits_end, chr_lits2, chr_lits2_end

@@ -574,3 +574,13 @@ Implementation (vari.c "chromatic mode"):
   `658445118e825f13da4e8014a921e29d1003cdaef2b1a132ff67d067a084fd80`.
 - Native build, Python patcher and browser patcher are byte-identical. Host UI, chop, resampler, persistence,
   chromatic and sanitizer stress tests pass. Hardware confirmation is still pending.
+
+## Test release v2.12 — REMAIN-page event fix
+- Hardware confirmed the v2.11 image was installed (`2.11` at power-on), but REMAIN + MARK did nothing.
+- Root cause: REMAIN is button 35, but its stock Play-page branch calls `setpage(14)` at `0x0C0C50BA` as soon
+  as REMAIN is pressed. The later MARK event therefore reaches CPageRemain, not the hooked CPagePlay method.
+- CPageRemain event slot `0x0C12F1AC` (original `0x0C0CA404`) now points to `rem_stub`, which calls the same
+  chop UI before preserving the original handler. Normal REMAIN behavior remains stock.
+- Output: 475328 bytes, MD5 `c376940911b8501e048743bc9f977c32`, SHA-256
+  `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
+- Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
