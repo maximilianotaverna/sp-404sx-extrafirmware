@@ -142,6 +142,12 @@ int main(){ vari_need_load=1;
       CHECK(*(unsigned*)(padinfo+(21+i)*32+12)==0x200+(i+1)*0x4000, "auto-slice end boundary");
       CHECK(vari_tab.e[21+i].pos==-12, "auto-slice copies varispeed setting");
     }
+    /* A non-even span distributes aligned remainder units without cumulative drift. */
+    for(int p=30;p<34;p++) setpad(p,0,0); *(unsigned*)(padinfo+20*32+12)=0x1020c; marksaves=0;
+    CHECK(chop_arm(20,30,4)==1 && vari_xop(job,0)==0, "uneven auto-slice executes");
+    { unsigned want[5]={0x200,0x4200,0x8204,0xc208,0x1020c};
+      for(int i=0;i<4;i++) CHECK(*(unsigned*)(padinfo+(30+i)*32+8)==want[i] &&
+          *(unsigned*)(padinfo+(30+i)*32+12)==want[i+1], "uneven boundaries match full-span plan"); }
     setpad(22,90000,2); CHECK(chop_arm(20,21,4)==0 && !chop_st.active, "occupied destination rejects whole batch");
     setpad(22,0,0); CHECK(chop_arm(22,21,4)==0, "source overlap rejects whole batch");
   }

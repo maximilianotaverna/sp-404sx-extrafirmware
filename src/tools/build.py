@@ -62,6 +62,13 @@ FILL_SLOTS_REV = (0x0C0F6040, 0x0C0F6120, 0x0C0F6200, 0x0C0F62E0, 0x0C0F64C0)
 # Factory test mode. Boot runs: kind = detect test file / key combo (0x0C0BFDE0); if kind: enter test pages.
 # Gate: 0x0C0D1852 `mov r0,r3` -> `mov #0,r3` (the normal-boot value), so the test pages are never entered.
 TEST_GATE, TEST_GATE_OLD, TEST_GATE_NEW = 0x0C0D1852, bytes.fromhex('6483 6303 2338 890a'), 0xE300
+# A reset/startup jump skips this aligned zero block entirely.  It is runtime address space, not updater padding.
+BOOTGAP, BOOTGAP_END = 0x0C080880, 0x0C080900
+# Stock LIGHTS parameter 26 (OFF / R B / B / R / SLP).  The six method pointers are redirected to our
+# four-byte return-zero method, forcing OFF and making the contiguous methods available to the chop worker.
+LIGHTS, LIGHTS_END = 0x0C0C5694, 0x0C0C57AC
+LIGHTS_METHODS = (0x0C0C5694, 0x0C0C56A4, 0x0C0C56CC, 0x0C0C56DC, 0x0C0C5720, 0x0C0C5740)
+LIGHTS_SLOTS = (0x0C12E1F0, 0x0C12E1F8, 0x0C12E200, 0x0C12E208, 0x0C12E210, 0x0C12E218)
 # CPageTestDevice method 5 (0x0C0CF568..0x0C0CF7B3) is only reachable through its vtable slot. Its first part
 # keeps the page's shared literal pool (0x0C0CF5D0..0x0C0CF61F), so only 0x0C0CF620.. is reused. The slot
 # is pointed at the page's own `return 0` method (0x0C0CF7B8) in case the page were ever shown.
@@ -163,15 +170,19 @@ def compile_all():
     run(['sh4-linux-gnu-objcopy', '-O', 'binary', '-j', '.text', 'vari.elf', 'dump.bin'])
     for sec in ('persist', 'wsp', 'helper', 'dev', *(n for n, *_ in EXTRA)):
         run(['sh4-linux-gnu-objcopy', '-O', 'binary', '-j', '.' + sec, 'vari.elf', sec + '.bin'])
+    for sec in ('bootgap', 'lights'):
+        run(['sh4-linux-gnu-objcopy', '-O', 'binary', '-j', '.' + sec, 'vari.elf', sec + '.bin'])
     syms = {}
     for line in run(['sh4-linux-gnu-nm', 'vari.elf']).splitlines():
         a, t, n = line.split()
         syms[n] = int(a, 16)
     assert not run(['sh4-linux-gnu-nm', '-u', 'vari.elf']).strip(), 'undefined symbols'
-    code = ('.entry', '.text', '.persist', '.helper', '.dev', *('.' + n for n, *_ in EXTRA if n not in CHR_DATA))
+    code = ('.entry', '.text', '.persist', '.helper', '.dev', '.bootgap', '.lights',
+            *('.' + n for n, *_ in EXTRA if n not in CHR_DATA))
     dis = run(['sh4-linux-gnu-objdump', '-d', *(x for s in code for x in ('-j', s)), 'vari.elf'])
     rd = lambda n: open(os.path.join(SRC, n), 'rb').read()
-    return rd('cave.bin'), rd('dump.bin'), rd('persist.bin'), rd('wsp.bin'), rd('helper.bin'), rd('dev.bin'), {n: rd(n + '.bin') for n, *_ in EXTRA}, syms, dis
+    return (rd('cave.bin'), rd('dump.bin'), rd('persist.bin'), rd('wsp.bin'), rd('helper.bin'), rd('dev.bin'),
+            rd('bootgap.bin'), rd('lights.bin'), {n: rd(n + '.bin') for n, *_ in EXTRA}, syms, dis)
 
 def check_instructions(dis, syms, cave_len):
     """Decoded instructions in code ranges must be on the SH-2A allow-list.
@@ -269,13 +280,15 @@ def put32(buf, addr, old, new):
 def build(official):
     if hashlib.md5(official).hexdigest() != OFFICIAL_MD5:
         sys.exit('input is not the official SP-404SX system 1.07 sp404sx_up.bin (MD5 mismatch)')
-    cave, dump, persist, wsp, helper, dev, extra, syms, dis = compile_all()
+    cave, dump, persist, wsp, helper, dev, bootgap, lights, extra, syms, dis = compile_all()
     bad, seen = check_instructions(dis, syms, len(cave))
     assert not bad, f'non-SH-2A or unexpected instructions: {bad}'
     assert syms['_start'] == CAVE and CAVE + len(cave) <= min(syms['vari_vs'], syms['vari_snap']) and syms['vari_tab'] + 244 <= CAVE_END
     assert DUMP + len(dump) <= DUMP_END and OSFN + len(persist) <= OSFN_END
     assert WSPFN + len(wsp) <= WSPFN_END and HELPER_CODE + len(helper) <= HELPER_END
     assert DEV + len(dev) <= DEV_END and syms['base_bpm'] == DEV
+    assert BOOTGAP + len(bootgap) <= BOOTGAP_END and LIGHTS + len(lights) <= LIGHTS_END
+    assert syms['chop_arm'] == BOOTGAP and syms['chop_run'] == LIGHTS and syms['lights_ret'] < LIGHTS_END
     for n, lo, hi, slot, ret0 in EXTRA:
         assert lo + len(extra[n]) <= hi and extra[n], f'{n} empty or too big'
     assert syms['vari_path'] >= WSPFN and syms['pad_fp'] == HELPER_CODE and syms['resync'] >= OSFN
@@ -286,6 +299,17 @@ def build(official):
     new = bytearray(img)
     co, do_ = CAVE - BASE, DUMP - BASE
     assert new[co:CAVE_END - BASE] == bytes(CAVE_END - CAVE), 'cave not empty'
+    assert img[BOOTGAP - BASE:BOOTGAP_END - BASE] == bytes(BOOTGAP_END - BOOTGAP), 'startup gap not empty'
+    assert not branches_into(img, BOOTGAP, BOOTGAP_END), 'something branches into the startup gap'
+    assert not const_loads_into(img, BOOTGAP, BOOTGAP_END, []), 'constant loads into the startup gap'
+    assert not [i for i in range(0, len(img) - 3, 4)
+                if BOOTGAP <= struct.unpack('>I', img[i:i + 4])[0] < BOOTGAP_END], 'pointers into startup gap'
+    assert not branches_into(img, LIGHTS, LIGHTS_END), 'something branches into the LIGHTS methods'
+    assert not const_loads_into(img, LIGHTS, LIGHTS_END, [(LIGHTS, LIGHTS_END)]), 'constant loads into LIGHTS methods'
+    light_ptrs = [BASE + i for i in range(0, len(img) - 3, 4)
+                  if LIGHTS <= struct.unpack('>I', img[i:i + 4])[0] < LIGHTS_END]
+    assert light_ptrs == list(LIGHTS_SLOTS), f'LIGHTS pointers: {[hex(p) for p in light_ptrs]}'
+    assert tuple(u32(img, p) for p in LIGHTS_SLOTS) == LIGHTS_METHODS, 'LIGHTS method table changed'
     assert new[do_:do_ + 4] == bytes.fromhex('2fe64f22'), 'debug dump prologue not found'
     assert not branches_into(img, DUMP, DUMP_END), 'something branches into the reclaimed debug dump'
     assert not branches_into(img, HELPER, DUMP_END), 'something branches into the dead filename helper'
@@ -377,6 +401,10 @@ def build(official):
     new[WSPFN - BASE:WSPFN - BASE + len(wsp)] = wsp
     new[HELPER_CODE - BASE:HELPER_CODE - BASE + len(helper)] = helper
     new[DEV - BASE:DEV - BASE + len(dev)] = dev
+    new[BOOTGAP - BASE:BOOTGAP - BASE + len(bootgap)] = bootgap
+    new[LIGHTS - BASE:LIGHTS - BASE + len(lights)] = lights
+    for p, old in zip(LIGHTS_SLOTS, LIGHTS_METHODS):
+        put32(new, p, old, syms['lights_ret'])
     put32(new, DEV_SLOT, DEV_METHOD, DEV_RET0)
     for n, lo, hi, slot, ret0 in EXTRA:
         new[lo - BASE:lo - BASE + len(extra[n])] = extra[n]
@@ -417,6 +445,7 @@ def build(official):
                 if struct.unpack('>I', new[i:i + 4])[0] == target and not any(
                     lo - BASE <= i < hi - BASE for lo, hi in ((CAVE, CAVE_END), (DUMP, DUMP_END), (OSFN, OSFN_END),
                                                                (HELPER_CODE, HELPER_END), (DEV, DEV_END),
+                                                               (BOOTGAP, BOOTGAP_END), (LIGHTS, LIGHTS_END),
                                                                *((lo, lo + len(extra[n])) for n, lo, *_ in EXTRA)))]
         assert not left, f'{target:#x} still referenced at {left}'
     o = DISP - BASE
@@ -427,9 +456,11 @@ def build(official):
 
     # after patching: no live code outside our areas loads a constant from inside them
     ours = [(CAVE, CAVE_END), (DUMP, DUMP_END), (HELPER, HELPER_END), (DISP, DISP + 12),
-            (OSFN, OSFN_END), (WSPFN, WSPFN_END), (DEV_METHOD, DEV_END)] + [(lo, hi) for _, lo, hi, _, _ in EXTRA]
+            (OSFN, OSFN_END), (WSPFN, WSPFN_END), (DEV_METHOD, DEV_END),
+            (BOOTGAP, BOOTGAP_END), (LIGHTS, LIGHTS_END)] + [(lo, hi) for _, lo, hi, _, _ in EXTRA]
     for lo, hi in ((DUMP, DUMP_END), (CAVE, CAVE_END), (DISP, DISP + 12), (OSFN, OSFN_END), (WSPFN, WSPFN_END),
-                   (HELPER_CODE, HELPER_END), (DEV, DEV_END), *[(lo, hi) for _, lo, hi, _, _ in EXTRA]):
+                   (HELPER_CODE, HELPER_END), (DEV, DEV_END), (BOOTGAP, BOOTGAP_END), (LIGHTS, LIGHTS_END),
+                   *[(lo, hi) for _, lo, hi, _, _ in EXTRA]):
         # a literal-pool word of the stock image stays data even when its only loader was in an area we reused
         stray = [(a, t) for a, t in const_loads_into(bytes(new), lo, hi, ours) if a not in literal_pools(img)
                  and not any(s0 <= a < s1 for s0, s1 in POOL_SPANS.values())]
@@ -437,7 +468,12 @@ def build(official):
     left = [hex(BASE + i) for i in range(0, len(new) - 3, 4) if DEV_METHOD <= struct.unpack('>I', new[i:i + 4])[0] < DEV_END
             and not any(lo - BASE <= i < hi - BASE for lo, hi in ours)]
     assert not left, f'pointers into the reused test page method: {left}'
-    hooks = {REQ_PTR: syms['req_stub'], PLAY_PTR: syms['play_stub'], REL_PTR: syms['rel_stub'], PEV_SLOT: syms['pev_stub'], NOTE_PTR: syms['note_stub'], GATE_PTR: syms['gate_stub'], GATE2_PTR: syms['gate2_stub'], HOLD_PTR: syms['hold_stub'], XCOPY_PTR: syms['xcopy_stub'], XEXCH_PTR: syms['xexch_stub'], PEN_SLOT: syms['pen_stub'], PREF_SLOT: syms['pref_stub']}   # planned entries
+    hooks = {REQ_PTR: syms['req_stub'], PLAY_PTR: syms['play_stub'], REL_PTR: syms['rel_stub'], PEV_SLOT: syms['pev_stub'], NOTE_PTR: syms['note_stub'], GATE_PTR: syms['gate_stub'], GATE2_PTR: syms['gate2_stub'], HOLD_PTR: syms['hold_stub'], XCOPY_PTR: syms['xcopy_stub'], XEXCH_PTR: syms['xexch_stub'], PEN_SLOT: syms['pen_stub'], PREF_SLOT: syms['pref_stub'], **{p: syms['lights_ret'] for p in LIGHTS_SLOTS}}   # planned entries
+    light_ptrs = [BASE + i for i in range(0, len(new) - 3, 4)
+                  if LIGHTS <= struct.unpack('>I', new[i:i + 4])[0] < LIGHTS_END
+                  and not any(a - BASE <= i < b - BASE for a, b in ours)]
+    assert light_ptrs == list(LIGHTS_SLOTS) and all(u32(new, p) == syms['lights_ret'] for p in LIGHTS_SLOTS), \
+        f'unexpected pointers into reclaimed LIGHTS methods: {[hex(p) for p in light_ptrs]}'
     for n, lo, hi, slot, ret0 in EXTRA:
         left = [hex(BASE + i) for i in range(0, len(new) - 3, 4) if lo <= struct.unpack('>I', new[i:i + 4])[0] < hi
                 and not any(a - BASE <= i < b - BASE for a, b in ours)
@@ -460,10 +496,14 @@ def build(official):
                set(range(HELPER_CODE - BASE, HELPER_CODE - BASE + len(helper))) |
                {a - BASE + k for a in (LOAD_PTR, TICK_PTR, DEV_SLOT, REQ_PTR, PLAY_PTR, REL_PTR, PEV_SLOT, NOTE_PTR, GATE_PTR, GATE2_PTR, HOLD_PTR, XCOPY_PTR, XEXCH_PTR, PEN_SLOT, PREF_SLOT) for k in range(4)} |
                set(range(DEV - BASE, DEV - BASE + len(dev))) |
+               set(range(BOOTGAP - BASE, BOOTGAP - BASE + len(bootgap))) |
+               set(range(LIGHTS - BASE, LIGHTS - BASE + len(lights))) |
+               {a - BASE + k for a in LIGHTS_SLOTS for k in range(4)} |
                {x - BASE for n, lo, hi, slot, ret0 in EXTRA for x in (*range(lo, lo + len(extra[n])), *(range(slot, slot + 4) if slot else ()))} | {TEST_GATE - BASE, TEST_GATE - BASE + 1, LED_RANGE - BASE + 1, REFRESH_RANGE - BASE + 1, LED_BLINK - BASE + 1} |
                {a - BASE + 1 for a, _, _ in VERSION_TEXT})
     assert set(diff) <= allowed, [hex(BASE + d) for d in diff if d not in allowed]
-    info = dict(extra={n: len(b) for n, b in extra.items()}, dev=len(dev), cave=len(cave), dump=len(dump), diff=len(diff), rewritten=rewritten, seen=sorted(seen),
+    info = dict(extra={n: len(b) for n, b in extra.items()}, dev=len(dev), cave=len(cave), dump=len(dump),
+                bootgap=len(bootgap), lights=len(lights), diff=len(diff), rewritten=rewritten, seen=sorted(seen),
                 stubs=dict(disp=disp_stub, ev=ev_stub, fill_fwd=fill_fwd, fill_rev=fill_rev, dump_ok=dump_ok),
                 ram=(syms['vari_vs'], syms['vari_tab'] + 244), persist=len(persist), wsp=len(wsp), helper=len(helper),
                 load_stub=load_stub, tick_stub=tick_stub)

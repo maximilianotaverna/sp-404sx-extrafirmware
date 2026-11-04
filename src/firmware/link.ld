@@ -2,6 +2,7 @@ OUTPUT_FORMAT("elf32-shbig-linux")
 ENTRY(_start)
 MEMORY {
   cave (rwx) : ORIGIN = 0x0C080400, LENGTH = 1024   /* free: above vector 255                     */
+  bootgap (rx): ORIGIN = 0x0C080880, LENGTH = 0x80  /* verified zero gap before startup continues */
   dump (rx)  : ORIGIN = 0x0C089EF4, LENGTH = 0x46C  /* reclaimed hidden PAD_INFO debug dump        */
   os   (rx)  : ORIGIN = 0x0C0EB5A0, LENGTH = 0x1B8  /* reclaimed unreferenced OS service routine   */
   wsp  (r)   : ORIGIN = 0x0C0A9558, LENGTH = 0xAC   /* reclaimed unreferenced effects method       */
@@ -9,6 +10,7 @@ MEMORY {
   midi (rx)  : ORIGIN = 0x0C0CDDDC, LENGTH = 0xE0   /* reclaimed factory test page (CPageTestMidi) method */
   led  (rx)  : ORIGIN = 0x0C0CD838, LENGTH = 0xC4   /* reclaimed factory test page (CPageTestLED) method */
   dev  (rx)  : ORIGIN = 0x0C0CF620, LENGTH = 0x194  /* reclaimed factory test page (CPageTestDevice) method */
+  lights (rx): ORIGIN = 0x0C0C5694, LENGTH = 0x118  /* stock LIGHTS methods; parameter 26 forced OFF */
   /* chromatic mode: more reclaimed factory test page methods (see EXTRA in src/tools/build.py) */
   chra (rx)  : ORIGIN = 0x0C0CEEB0, LENGTH = 0x94   /* CPageTestVer method 5       */
   chrb (rx)  : ORIGIN = 0x0C0CD4D0, LENGTH = 0x8C   /* CPageTestExtract method 2   */
@@ -36,6 +38,7 @@ MEMORY {
 }
 SECTIONS {
   .entry : { *(.entry) *(.text.cavestubs) *(.text.cave) *(.text.chrok) *(.rodata.cave) . = ALIGN(4); *(.cavedata) . = ALIGN(4); } > cave
+  .bootgap : { *(.text.chrchopcheck) . = ALIGN(4); } > bootgap
   .vbss (NOLOAD) : { *(.vbss) . = ALIGN(4); } > cave
   .text : { *(.text.fp) *(.text) *(.text.unlikely*) *(.text.startup*) *(.text.hot*) *(.rodata) *(.rodata.str*) . = ALIGN(4); } > dump
   .persist : { *(.text.persist) . = ALIGN(4); } > os
@@ -61,10 +64,11 @@ SECTIONS {
   .chrs : { *(.text.chrrelease) . = ALIGN(4); } > chrs
   .chru : { *(.text.chrfree) . = ALIGN(4); } > chru
   .chrv : { *(.text.chrpageenter) . = ALIGN(4); } > chrv
-  .chrx : { *(.text.chropen) *(.text.chrload) . = ALIGN(4); } > chrx
+  .chrx : { *(.text.chropen) *(.text.chrload) *(.text.chrchopone) . = ALIGN(4); } > chrx
   .chry : { *(.text.chrnote) *(.text.chrcheck) . = ALIGN(4); } > chry
-  .chrz : { *(.text.chrknob) . = ALIGN(4); } > chrz
-  .chrw : { *(.text.chrxop) *(.text.chrxset) *(.text.chrgate) *(.text.chrshow) *(.text.chrstubs2) *(.text.chrpadkey) *(.text.chrplay) *(.text.chrbankof) . = ALIGN(4); } > chrw
+  .chrz : { *(.text.chrknob) *(.text.chrxset) . = ALIGN(4); } > chrz
+  .chrw : { *(.text.chrxop) *(.text.chrgate) *(.text.chrshow) *(.text.chrstubs2) *(.text.chrpadkey) *(.text.chrplay) *(.text.chrbankof) . = ALIGN(4); } > chrw
+  .lights : { *(.text.chrchoprun) *(.text.chrlightsret) . = ALIGN(4); } > lights
   .chrg : { *(.rodata.chr) . = ALIGN(4); } > chrg
   .chrk : { *(.chrdata) . = ALIGN(4); } > chrk
   /DISCARD/ : { *(.comment) *(.note*) *(.eh_frame*) *(.data*) *(.bss*) }

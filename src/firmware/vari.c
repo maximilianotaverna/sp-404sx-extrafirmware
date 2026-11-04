@@ -740,11 +740,14 @@ CHR(xset) static void vari_xset(int pad, int pos) {
    checked up front, so an occupied pad or source overlap cannot create a partial set. */
 CHR(chopcheck) int chop_arm(int source, int first, int count) {
     int i;
+    const unsigned char *p;
     if ((unsigned)source >= 120 || (unsigned)first >= 120 || count > 120 - first ||
-        (count != 4 && count != 8 && count != 12 && count != 16)) return 0;
+        count < 4 || count > 16 || (count & 3)) return 0;
+    if (source >= first && source < first + count) return 0;
+    p = PADINFO + first * 32 + 4;
     for (i = 0; i < count; i++) {
-        int d = first + i;
-        if (d == source || *(const u32 *)(PADINFO + d * 32 + 4) > 512) return 0;
+        if (*(const u32 *)p > 512) return 0;
+        p += 32;
     }
     chop_st.source = (unsigned char)source;
     chop_st.first = (unsigned char)first;
@@ -752,29 +755,43 @@ CHR(chopcheck) int chop_arm(int source, int first, int count) {
     chop_st.active = 1;
     return 1;
 }
-CHR(chopbound) static unsigned chop_bound(unsigned start, unsigned end, unsigned count, unsigned i, unsigned quantum) {
-    unsigned units = R_DIV(end - start, quantum), base = R_DIV(units, count);
-    return start + (base * i + R_DIV((units - base * count) * i, count)) * quantum;
+CHR(chopone) static int chop_one(int (*fn)(void), int d, unsigned start, unsigned end, int speed) {
+    int r;
+    R_SET(61, d, -1, 0);
+    r = fn();
+    if (!(r & 0xFF)) {
+        vari_xset(d, speed);
+        R_PADSET(31, start, d);
+        R_PADSET(33, end, d);
+    }
+    return r;
 }
+CHR(lightsret) int lights_ret(void) { return 0; }
 /* Runs in Roland's file task through xcopy_stub.  Every successful native worker call has already copied the
    sample and saved PAD_INFO.  Marks are applied afterwards; one final native save commits the last update. */
 CHR(choprun) static int chop_run(int (*fn)(void)) {
     int source = chop_st.source, first = chop_st.first, count = chop_st.count, i, r = 0;
     unsigned start = R_GET(31, source), end = R_GET(33, source);
     unsigned quantum = PADINFO[source * 32 + 22] == 2 ? 4 : 2;
-    unsigned minimum = quantum == 4 ? 0x1000 : 0x800;
+    unsigned units, base, step, rem, error = 0, pos = start;
     int speed = vari_tab.e[source].pos;
     chop_st.active = 0;
-    if (end <= start || R_DIV(end - start, count) < (int)minimum) return 1;
+    if (end <= start) return 1;
+    units = R_DIV(end - start, quantum);
+    base = R_DIV(units, count);
+    if (base < 0x400) return 1;
+    step = base * quantum;
+    rem = units - base * count;
+    R_SET(60, source, -1, 0);
     for (i = 0; i < count; i++) {
         int d = first + i;
-        R_SET(60, source, -1, 0);
-        R_SET(61, d, -1, 0);
-        r = fn();
+        unsigned next;
+        error += rem;
+        next = pos + step;
+        if (error >= (unsigned)count) { next += quantum; error -= count; }
+        r = chop_one(fn, d, pos, next, speed);
         if (r & 0xFF) break;
-        vari_xset(d, speed);
-        R_PADSET(31, chop_bound(start, end, count, i, quantum), d);
-        R_PADSET(33, chop_bound(start, end, count, i + 1, quantum), d);
+        pos = next;
     }
     if (i) R_PADSAVE();
     return r;
