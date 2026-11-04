@@ -7,7 +7,7 @@ slowing down a tape or a turntable), a **chromatic mode** that turns a bank into
 that divides a sample across 4, 8, 12 or 16 consecutive pads.
 
 > **Current sample-chop test release: v2.14** (the version screen shows `2.14`), based on Roland's system 1.07.
-> Output SHA-256: `e3d21b2c2d6746e618f2403cce25210df17fb9e3b250394dce9b3159859e06ec`.
+> Output SHA-256: `074b37745cc4e1b114e3eefd83990dcd557b1a25cd84132b94eb015d49014f42`.
 
 ## What it adds
 

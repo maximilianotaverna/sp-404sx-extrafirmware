@@ -26,7 +26,7 @@ It prints
 
 ```
 SP-404SX/A EXTRAfirmware v2.14 written to out/sp404sx_up.bin
-SHA-256 e3d21b2c2d6746e618f2403cce25210df17fb9e3b250394dce9b3159859e06ec
+SHA-256 074b37745cc4e1b114e3eefd83990dcd557b1a25cd84132b94eb015d49014f42
 ```
 
 Either way the file you get is named `sp404sx_up.bin` and has that SHA-256. The SP-404SX/A only installs
