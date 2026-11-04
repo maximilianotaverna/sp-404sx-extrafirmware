@@ -6,8 +6,8 @@ way. It adds tape-style **varispeed** to every pad (pitch and tempo change toget
 slowing down a tape or a turntable), a **chromatic mode** that turns a bank into a keyboard, and **auto-slice**
 that divides a sample across any number from 2 to 16 consecutive pads.
 
-> **Current sample-chop test release: v2.17** (the version screen shows `2.17`), based on Roland's system 1.07.
-> Output SHA-256: `505108d89b2be42d1fac772c8b04bef22052f8dd087bf09a539c503f8649f714`.
+> **Current sample-chop test release: v2.18** (the version screen shows `2.18`), based on Roland's system 1.07.
+> Output SHA-256: `3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
 
 ## What it adds
 
@@ -62,7 +62,7 @@ Full details: [docs/USER_GUIDE.md](docs/USER_GUIDE.md).
 `ChP` appears and MARK blinks while the copies and slice marks are being written. Wait for `don`, when MARK
 stops blinking. `Err` means processing failed.
 
-The source is copied to consecutive pads with evenly divided start/end marks. Every destination must be empty
+The source is copied to consecutive pads with definite, non-overlapping regions: each END is the next chop's START. Every destination must be empty
 and the source cannot be inside the destination range. `FUL` means the range is unavailable; press **CANCEL**
 and choose another. CANCEL also exits before a destination is chosen. Every generated chop has GATE enabled.
 

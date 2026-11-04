@@ -584,6 +584,19 @@ Implementation (vari.c "chromatic mode"):
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
 
+## Test release v2.18 — definite chop regions
+- Disassembly of Roland's native pad setter showed that parameter 33 is a length relative to the current START:
+  the setter loads START, adds the supplied value, and stores the resulting END.
+- The earlier chop engine supplied the absolute next boundary, causing START to be added twice and later END
+  positions to clamp to the sample's full data end.
+- Each destination now receives parameter 31 = slice START and parameter 33 = `next - start`. The planner divides
+  the source's selected length directly, so an already-trimmed source is handled correctly too.
+- The host mock now mirrors the native START + length setter and relative-length getter. Existing even and uneven
+  boundary tests therefore verify the actual stored END positions.
+- The change leaves `chrx` at 460 bytes in its existing 464-byte region; no new region is reclaimed.
+- Output: 475440 bytes, MD5 `7b12449e7a1b28cb67f0e21e1f416fda`, SHA-256
+  `3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
+
 ## Test release v2.17 — persistent destination count
 - Hardware showed that merely leaving the chosen `Cxx` in the display buffer was insufficient: Roland's delayed
   play-page refresh restored the source sample number after roughly 1–2 seconds.

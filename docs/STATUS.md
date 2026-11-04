@@ -3,6 +3,17 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.18 definite chop regions
+
+Checked in software:
+- Parameter 33 is supplied with each slice's length; Roland stores END as START + length.
+- Every generated END equals the following slice's START, including uneven divisions and sources with edited marks.
+- The host persistence mock now models the native relative-END behavior.
+- Native output SHA-256: `3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
+
+Awaiting hardware confirmation:
+- Confirm `2.18` and verify that every chop's END marker is at the next chop's START.
+
 ## v2.17 persistent destination count
 
 Checked in software:

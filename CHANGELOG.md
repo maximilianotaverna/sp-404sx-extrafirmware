@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.18 (definite chop regions)
+
+The version screen shows `2.18`. Expected patched-file SHA-256:
+`3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
+
+- Corrects Roland parameter 33 handling: it is a region length relative to START, not an absolute END position.
+- Places every generated END exactly at the next chop's START instead of allowing later ends to clamp to the full sample end.
+- Divides the source's selected region length directly, including sources whose START marker was already moved.
+- Updates the persistence mock to reproduce Roland's relative-END semantics.
+
 ## v2.17 (persistent destination count)
 
 The version screen shows `2.17`. Expected patched-file SHA-256:
