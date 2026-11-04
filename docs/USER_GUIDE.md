@@ -127,7 +127,7 @@ Every generated chop has **GATE enabled**, regardless of the source pad's GATE s
 - Roland's **factory hardware-test mode** (the technician test screens started from a test file on the card
   or a key combination at power-on) is removed to make room for the new code. Nothing a player uses
   depends on it. Installing Roland's original update brings it back.
-- The **power-on version display** (hold MARK) shows `2.18` instead of `1.07`.
+- The **power-on version display** (hold MARK) shows `2.19` instead of `1.07`.
 
 ## Limits and notes
 

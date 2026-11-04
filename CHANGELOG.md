@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.19 (stock-equivalent START/END writes)
+
+The version screen shows `2.19`. Expected patched-file SHA-256:
+`05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
+
+- Matches Roland's START/END editor: read START with parameter 31, write START with parameter 32, and read/write absolute END with parameter 33.
+- Restores region division to `(END - START)`; this fixes v2.18's overrun and very short final chop.
+- Keeps every generated END equal to the following chop's START, including uneven divisions.
+- Corrects the host model so it no longer validates the disproven relative-END assumption.
+
 ## v2.18 (definite chop regions)
 
 The version screen shows `2.18`. Expected patched-file SHA-256:
@@ -9,6 +19,8 @@ The version screen shows `2.18`. Expected patched-file SHA-256:
 - Places every generated END exactly at the next chop's START instead of allowing later ends to clamp to the full sample end.
 - Divides the source's selected region length directly, including sources whose START marker was already moved.
 - Updates the persistence mock to reproduce Roland's relative-END semantics.
+
+Hardware result: unsuccessful. END markers were still incorrect and the last chop became extremely short. The relative-END interpretation was disproven and corrected in v2.19.
 
 ## v2.17 (persistent destination count)
 

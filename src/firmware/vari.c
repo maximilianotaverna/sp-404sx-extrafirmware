@@ -825,8 +825,10 @@ CHR(chopone) static int chop_one(int (*fn)(void), int d, unsigned start, unsigne
     r = fn();
     if (!(r & 0xFF)) {
         vari_xset(d, speed);
-        R_PADSET(31, start, d);
-        R_PADSET(33, end - start, d);
+        /* Match the stock START/END editor exactly: it reads START through
+           parameter 31 but commits START through 32; END is absolute in 33. */
+        R_PADSET(32, start, d);
+        R_PADSET(33, end, d);
         R_PADSET(38, 1, d);
     }
     return r;
@@ -836,12 +838,12 @@ CHR(lightsret) int lights_ret(void) { return 0; }
    sample and saved PAD_INFO.  Marks are applied afterwards; one final native save commits the last update. */
 CHR(choprun) static int chop_run(int (*fn)(void)) {
     int source = chop_st.source, first = chop_st.first, count = chop_st.count, i, r = 0;
-    unsigned start = R_GET(31, source), span = R_GET(33, source);
+    unsigned start = R_GET(31, source), end = R_GET(33, source);
     unsigned quantum = PADINFO[source * 32 + 22] == 2 ? 4 : 2;
     unsigned units, base, step, rem, error = 0, pos = start;
     int speed = vari_tab.e[source].pos;
-    if (!span) return 1;
-    units = R_DIV(span, quantum);
+    if (end <= start) return 1;
+    units = R_DIV(end - start, quantum);
     base = R_DIV(units, count);
     if (base < 0x400) return 1;
     step = base * quantum;

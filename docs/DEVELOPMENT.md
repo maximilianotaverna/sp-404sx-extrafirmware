@@ -14,7 +14,7 @@ SP-404SX's own updater copies it to flash. EXTRAfirmware adds code to that image
 | Factory test pages | Test mode disabled at boot; methods of CPageTestDevice / Midi / LED reused for varispeed, methods of most other test pages (and the helper block after the CPageTestSw constructor) for chromatic mode; each slot pointed at its page's `return 0` method |
 | CPageSmplEdit (TIME/BPM page) | Event and display hooks; light and refresh mode ranges include the CTRL 3 view |
 | 10 CSmplCharge vtables | `fill()` wrapped: asks Roland's fill for `ratio ×` the frames and resamples them (linear interpolation) |
-| Version text (`0x0C0F1142`, `0x0C0F115A`, `0x0C0F116C`) | Version screen shows `2.18` |
+| Version text (`0x0C0F1142`, `0x0C0F115A`, `0x0C0F116C`) | Version screen shows `2.19` |
 | PAD_INFO load / 100 ms auto-save | Load and save `VARISPD.BIN` and `CHROMA.BIN` alongside Roland's pad settings |
 | Pad copy / exchange worker literals | Varispeed moves with the sample when Roland's copy / exchange succeeds |
 | Play request literal, pad start / release pointers | Chromatic mode: keys (and empty pads) play the source pad at the key's pitch |
@@ -98,7 +98,7 @@ The host tests compile `vari.c` for the PC with Roland's functions replaced by m
 4. Run the three checks above (and `node src/tools/check_web_page.js official/sp404sx_up.bin` if Playwright
    is installed).
 5. Update `CHANGELOG.md`, the SHA-256 in `README.md` and `docs/INSTALL.md`, and `docs/STATUS.md`.
-6. Commit and tag (`git tag -a v2.18`).
+6. Commit and tag (`git tag -a v2.19`).
 
 Never commit `sp404sx_up.bin` files (stock or built): they are Roland's code. `.gitignore` excludes them.
 

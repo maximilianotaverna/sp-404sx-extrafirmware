@@ -597,6 +597,20 @@ Implementation (vari.c "chromatic mode"):
 - Output: 475440 bytes, MD5 `7b12449e7a1b28cb67f0e21e1f416fda`, SHA-256
   `3d8ac1292ff6b47a1d05c48bf98c7ae69cf4ed6241cf430f850294a02963c618`.
 
+Hardware disproved this interpretation: markers remained incorrect and the last chop was extremely short.
+
+## Test release v2.19 — stock-equivalent START/END writes
+- A complete trace of CPageSmplEdit showed that CTRL 1 reads START through parameter 31 but commits it through
+  parameter 32. CTRL 2 reads and writes parameter 33 as an absolute END, clamped against parameter 35.
+- The v2.18 planner incorrectly divided absolute END as though it were a duration, explaining the overrun and
+  very short final region observed on hardware.
+- The worker now reproduces the stock path: GET 31/33, divide `END - START`, SET 32 to the absolute slice START,
+  and SET 33 to the absolute slice END. GATE remains explicitly enabled through parameter 38.
+- The host mock independently models those stock read/write IDs. Existing even and uneven tests verify that each
+  stored END equals the next stored START.
+- Output: 475392 bytes, MD5 `ef69d551ed5eedcd54c7d78219c0eba0`, SHA-256
+  `05d077fc8305d0451757b480d4ea5c98f294d37bc7a67e2b0ca2b6375d626e12`.
+
 ## Test release v2.17 — persistent destination count
 - Hardware showed that merely leaving the chosen `Cxx` in the display buffer was insufficient: Roland's delayed
   play-page refresh restored the source sample number after roughly 1–2 seconds.

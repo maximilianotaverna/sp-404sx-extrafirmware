@@ -5,7 +5,7 @@
 #include <stdlib.h>
 static unsigned char padinfo[120*32];
 static unsigned char card[1024]; static int card_len=-1, writes=0, locks=0;
-static int p60=-1,p61=-1; static int g(int id,int pad){ return id==52?7:id==60?p60:id==61?p61:id==31?(int)*(unsigned*)(padinfo+pad*32+8):id==33?(int)(*(unsigned*)(padinfo+pad*32+12)-*(unsigned*)(padinfo+pad*32+8)):0; } static int pt(void){return 12000;}
+static int p60=-1,p61=-1; static int g(int id,int pad){ return id==52?7:id==60?p60:id==61?p61:id==31?(int)*(unsigned*)(padinfo+pad*32+8):id==33?(int)*(unsigned*)(padinfo+pad*32+12):0; } static int pt(void){return 12000;}
 static int dv(int a,int b){return a/b;}
 static void sn(int n){} static void ss(const char*s,int f){}
 static void lk(int n){ locks++; } static void ulk(int n){ locks--; }
@@ -16,7 +16,7 @@ static int rd(int fd,void*b,int n){ int k=card_len-fd_pos<n?card_len-fd_pos:n; m
 static int wr(int fd,const void*b,int n){ memcpy(card,b,n); card_len=n; writes++; return n; }
 static void cl(int fd){ fd_mode=-1; } static int cardok(void){return 1;}
 static void st(int id,int v,int pad,int f){(void)pad;(void)f;if(id==60)p60=v;if(id==61)p61=v;} static int marksaves;
-static void pset(int id,int v,int pad){if(id==31)*(unsigned*)(padinfo+pad*32+8)=v;if(id==33)*(unsigned*)(padinfo+pad*32+12)=*(unsigned*)(padinfo+pad*32+8)+v;if(id==38)padinfo[pad*32+19]=(unsigned char)v;}
+static void pset(int id,int v,int pad){if(id==32)*(unsigned*)(padinfo+pad*32+8)=v;if(id==33)*(unsigned*)(padinfo+pad*32+12)=v;if(id==38)padinfo[pad*32+19]=(unsigned char)v;}
 static int psave(void){marksaves++;return 0;} static int evo(void*p,void*e){return 0;} static void dsp(void*p){}
 #define R_SET st
 #define R_PADSET pset
