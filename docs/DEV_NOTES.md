@@ -379,10 +379,9 @@ Implementation (vari.c "chromatic mode"):
   the engine to 8x. Automatic jump to bank C not done (bank select 0x0C0D0B10 is tangled with A/F toggling
   and other state); the bank stays where it is.
 - Buttons: switch test order table 0x0C12FFC4 + CPageTestSw texts: 34 = CANCEL ("CAN", 0x0C130030), 35 = REMAIN.
-- Play-page control trace (2026-11-04): ID 44 is MARK. Its ordinary handler at 0x0C0C51B8 checks the audio
-  engine and restarts the current pad, matching MARK's documented behavior. SHIFT + MARK is not free: the early
-  branch at 0x0C0C4C8A calls 0x0C0BF210, so auto-slice must not replace it. REMAIN + MARK has no play-page
-  special-case and is the selected auto-slice entry gesture.
+- Initial play-page trace incorrectly labelled ID 44 as MARK. Hardware failure and the complete factory switch
+  order later proved MARK = 36 and ID 44 = SUB PAD; restarting the current pad is SUB PAD's documented behavior.
+  The branch at 0x0C0C4C8A is therefore FUNC + SUB PAD, not FUNC + MARK.
 - Auto-slice UI: REMAIN + MARK captures parameter 52 (current pad), CTRL 3 selects 4/8/12/16, bank buttons stay
   stock, the next pad supplies `bank * 12 + id - 1`, and CANCEL (34) aborts. The compact play-page hook is 56
   bytes; the 412-byte state handler occupies the verified-dead CPageTestVer methods 1..4 at 0x0C0CECC8..0x0C0CEEAF
@@ -583,4 +582,15 @@ Implementation (vari.c "chromatic mode"):
   chop UI before preserving the original handler. Normal REMAIN behavior remains stock.
 - Output: 475328 bytes, MD5 `c376940911b8501e048743bc9f977c32`, SHA-256
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
+- Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.
+
+## Test release v2.13 — corrected MARK mapping and CANCEL gesture
+- Hardware confirmed v2.11 and v2.12 installed but neither reacted to physical MARK. Rechecking the complete
+  factory switch order found CANCEL = 34, REMAIN = 35, MARK = 36. The earlier ID 44 is SUB PAD; its stock
+  handler restarts the current pad, which independently confirms that identity.
+- Auto-slice now opens with CANCEL + MARK. CANCEL stays on CPagePlay, and the hook consumes MARK before Roland's
+  ordinary handler. The v2.12 CPageRemain hook and stub are removed.
+- FUNC + MARK remains available for a possible future lazy-chop workflow.
+- Output: 475312 bytes, MD5 `726ac7787065bca174ea4fad397a4038`, SHA-256
+  `e3d21b2c2d6746e618f2403cce25210df17fb9e3b250394dce9b3159859e06ec`.
 - Browser patch output is byte-identical. All host tests pass; hardware confirmation is pending.

@@ -44,8 +44,7 @@ typedef unsigned int u32;
 #define MAXV     12   /* SP-404SX polyphony; a voice numbered above this just plays at normal speed */
 #define BTN_BPM  40   /* TIME/BPM button: chromatic gesture; the only button whose stock handling differs between modes 7 and 8 */
 #define BTN_CANCEL 34
-#define BTN_REMAIN 35
-#define BTN_MARK   44
+#define BTN_MARK   36
 #define UNITY    0x10000u
 
 struct page  { void *vt; int mode; int f8; int f12; };   /* f12 == 1: CTRL 2 shows the pattern tempo */
@@ -412,7 +411,7 @@ CHR(chopui) static int chop_ui(struct event *e) {
     int n, first, source;
     if (e->type == 0 && e->val) chr_st.want = e->id == BTN_BPM && R_HELD(BTN_SHIFT) && !FWDMODE;
     if (!chop_st.active) {
-        if (e->type || !e->val || e->id != BTN_MARK || !R_HELD(BTN_REMAIN)) return 0;
+        if (e->type || !e->val || e->id != BTN_MARK || !R_HELD(BTN_CANCEL)) return 0;
         source = R_GET(P_CURPAD, -1);
         if ((unsigned)source >= 120 || *(const u32 *)(PADINFO + source * 32 + 4) <= 512) return 0;
         chop_st.active = 2; chop_st.source = (unsigned char)source; chop_st.count = 4;
@@ -443,8 +442,7 @@ CHR(chopui) static int chop_ui(struct event *e) {
     }
     return 1;
 }
-/* Play page event hook: SHIFT + TIME/BPM opens the chromatic menu. REMAIN + MARK selects an auto-slice source;
-   SHIFT + MARK remains Roland's stock shortcut. */
+/* Play page event hook: SHIFT + TIME/BPM opens the chromatic menu. CANCEL + MARK selects an auto-slice source. */
 typedef int (*evfn)(void *page, struct event *e);
 CHR(pageevent) int chr_page_event(void *page, struct event *e, evfn orig) {
     if (chop_ui(e)) return 1;

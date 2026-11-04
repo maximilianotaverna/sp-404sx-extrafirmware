@@ -4,7 +4,7 @@
    playing loop pad (gate off) only stops when it is pressed again. */
 struct event;
 static unsigned mock_page[3] = { 0x0C12E044u, 0, 0 };        /* page shown: vtable, -, state */
-static int mock_fwdmode, mock_held, mock_shift, mock_remain, mock_relpad = -2, mock_msgs;
+static int mock_fwdmode, mock_held, mock_shift, mock_cancel, mock_relpad = -2, mock_msgs;
 static unsigned char mock_loaded[120];                       /* pads with a sample (play request check) */
 static int mock_play_kind, mock_play_pad = -2, mock_reqs, mock_req_kind;
 static unsigned mock_attack = 0;                             /* speed of the first block of the last voice */
@@ -28,7 +28,7 @@ static int mock_playreq(void *q, int kind, int pad, int vel) {   /* Roland: load
   return chr_play(kind, pad, vel);
 }
 static void mock_rel(int pad) { mock_relpad = pad; }
-static int mock_held_fn(int id) { return id == 40 ? mock_held : id == 20 ? mock_shift : id == 35 ? mock_remain : 0; }
+static int mock_held_fn(int id) { return id == 40 ? mock_held : id == 20 ? mock_shift : id == 34 ? mock_cancel : 0; }
 static void mock_msg_fn(const char *s) { mock_msg = s; mock_msgs++; }
 #define R_PLAYREQ mock_playreq
 #define R_PLAYPAD mock_playpad

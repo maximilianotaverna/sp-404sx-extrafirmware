@@ -82,12 +82,12 @@ int main(){
   mock_shift=1; mock_fwdmode=1; play_btn(40,1); CHECK(chr_st.want==0, "FWD mode: Roland's SHIFT + TIME/BPM untouched");
   mock_fwdmode=0; pevs=0; play_btn(40,1); CHECK(chr_st.want==1 && pevs==1, "SHIFT + TIME/BPM: menu asked, Roland still opens the TIME/BPM page");
   play_btn(5,1); CHECK(chr_st.want==0, "any other button press cancels the request (page didn't open)");
-  mock_remain=1; CHECK(play_ev(0,44,1)==1 && chop_st.active==2 && chop_st.source==26 && chop_st.count==4 && !strcmp(mock_msg,"C04"),
-                       "REMAIN + MARK: current source and four slices");
-  mock_remain=0; CHECK(play_ev(1,2,70)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
+  mock_cancel=1; CHECK(play_ev(0,36,1)==1 && chop_st.active==2 && chop_st.source==26 && chop_st.count==4 && !strcmp(mock_msg,"C04"),
+                       "CANCEL + MARK: current source and four slices");
+  mock_cancel=0; CHECK(play_ev(1,2,70)==1 && chop_st.count==12 && !strcmp(mock_msg,"C12"), "CTRL 3: select 12 slices");
   mock_bank=4; CHECK(play_ev(0,3,1)==1 && mock_copies==1 && mock_copy_source==26 && mock_copy_first==50 && chop_st.active==1,
                      "destination pad: arm batch and post one native copy job");
-  chop_st.active=0; mock_bank=2; mock_remain=1; play_ev(0,44,1); mock_remain=0;
+  chop_st.active=0; mock_bank=2; mock_cancel=1; play_ev(0,36,1); mock_cancel=0;
   CHECK(play_ev(0,34,1)==1 && chop_st.active==0 && !strcmp(mock_msg,"CAN") && mock_copies==1, "CANCEL: leave without copying");
   mock_shift=0; mock_midich=0; open_menu(26);
   CHECK(tp.mode==MODE_CHR && chr_tab.b[2].src==27 && chr_tab.b[2].ch==2 && chr_tab.b[2].mode==2 && chr_st.dirty,

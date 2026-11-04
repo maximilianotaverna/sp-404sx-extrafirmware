@@ -3,7 +3,23 @@
 What has been confirmed on hardware, and what hasn't yet. Release v2.10 = test build v2.10c (byte-identical).
 Release v2.00 = internal build 13 plus the `2.00` version screen. The SP-404SX and SP-404A run the same firmware, so this applies to both.
 
+## v2.13 corrected panel mapping
+
+Checked in software:
+- Auto-slice uses CANCEL (ID 34) + MARK (ID 36). ID 44 is SUB PAD, not MARK.
+- The v2.12 Remain-page hook is removed; only the existing Play-page hook is needed.
+- Native build, Python patcher and browser patcher are byte-identical. Output SHA-256:
+  `e3d21b2c2d6746e618f2403cce25210df17fb9e3b250394dce9b3159859e06ec`.
+- All host UI, resampler, persistence, chromatic, chop and stress tests pass.
+
+Awaiting hardware confirmation:
+- Hold MARK during power-on and confirm `2.13`, play a loaded sample, then hold CANCEL and press MARK; `C04`
+  should appear.
+
 ## v2.12 sample-chop hardware fix
+
+Superseded: hardware confirmed `2.12` installed, but the gesture still did not open. The underlying MARK/SUB
+PAD mapping error was corrected in v2.13.
 
 Checked in software:
 - Hooks both the Play page and Roland's dedicated Remain page, so the MARK press following REMAIN reaches the
@@ -12,11 +28,13 @@ Checked in software:
   `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 - All host UI, resampler, persistence, chromatic, chop and stress tests pass.
 
-Awaiting hardware confirmation:
+The intended hardware checks were:
 - Hold MARK during power-on and confirm `2.12`, then play a loaded sample and press REMAIN followed by MARK;
   `C04` should appear.
 
 ## v2.11 sample-chop test release
+
+Superseded by v2.13 because the gesture used SUB PAD's ID instead of MARK's ID.
 
 Checked in software:
 - Displayed fork version is `2.11`; Roland's underlying updater version remains 1.07.

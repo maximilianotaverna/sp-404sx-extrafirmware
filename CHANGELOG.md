@@ -1,13 +1,24 @@
 # Changelog
 
+## v2.13 (corrected panel mapping)
+
+The version screen shows `2.13`. Expected patched-file SHA-256:
+`e3d21b2c2d6746e618f2403cce25210df17fb9e3b250394dce9b3159859e06ec`.
+
+- Auto-slice now opens with **CANCEL + MARK**.
+- Corrects MARK's panel ID to 36. The earlier ID 44 is SUB PAD, explaining why v2.11 and v2.12 never saw a
+  physical MARK press.
+- Removes the unnecessary Remain-page hook added in v2.12. The slice planner, copy worker and existing v2.10
+  features are unchanged.
+- Reserves FUNC + MARK as a candidate for a future lazy-chop workflow.
+
 ## v2.12 (sample-chop hardware fix)
 
 The version screen shows `2.12`. Expected patched-file SHA-256:
 `c6d10f587f607c8d855d94f5cee0b72136d9a8dc21ed215168b9d06a1760c2ef`.
 
-- Fixes REMAIN + MARK on hardware. Stock firmware switches to its dedicated Remain page as soon as REMAIN is
-  pressed; v2.11 only watched the Play page, so it never received the later MARK event. v2.12 also hooks the
-  Remain page while preserving its normal handler.
+- Attempted to fix REMAIN + MARK by also hooking Roland's dedicated Remain page. Hardware later showed this
+  was insufficient because MARK had been mapped to SUB PAD's ID; v2.13 supersedes this release.
 - No changes to the slice planner, copy worker, LIGHTS region or existing v2.10 features.
 
 ## v2.11 (sample-chop test release)

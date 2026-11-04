@@ -19,13 +19,13 @@ Patches on top of stock 1.07 (addresses in the unpacked image, loaded at 0x0C080
   * CPageSmplEdit (TIME/BPM page): event vtable slot 0x0C12F414 -> ev_stub; 12-byte trampoline at 0x0C0CB5D4 ->
     disp_stub; light (0x0C0CBF0C) and refresh (0x0C0CC0E6) mode ranges extended to the CTRL 3 view
   * fill() slot of all 10 CSmplCharge vtables -> fill_fwd / fill_rev (wrapping Roland's 0x0C0914B8 / 0x0C0921FC)
-  * version screen text 1.07 -> 2.12 (0x0C0F1142, 0x0C0F115A, 0x0C0F116C)
+  * version screen text 1.07 -> 2.13 (0x0C0F1142, 0x0C0F115A, 0x0C0F116C)
   * PAD_INFO load pointer 0x0C093D78 and 100 ms auto-save pointer 0x0C0EF4E8 -> load_stub / tick_stub
   * chromatic mode: the note handler's play request literal 0x0C08948C -> req_stub, pad start pointer 0x0C093F44
     and pad release pointer 0x0C093F38 -> play_stub / rel_stub,
     CPagePlay event / enter / refresh slots 0x0C12E060 / 0x0C12E050 / 0x0C12E078 -> pev_stub / pen_stub /
-    pref_stub, CPageRemain event slot 0x0C12F1AC -> rem_stub, the event loop's note handler literal
-    0x0C08F778 -> note_stub, the MIDI receiver's and the note handlers' note gate
+    pref_stub, the event loop's note handler literal 0x0C08F778 -> note_stub, the MIDI receiver's and the
+    note handlers' note gate
     literals 0x0C0F2784 / 0x0C089480 -> gate_stub / gate2_stub, HOLD's GATE lookup literal 0x0C0F1DD4 -> hold_stub;
     pad copy / exchange worker literals 0x0C088BF8 / 0x0C088CB4 -> xcopy_stub / xexch_stub (varispeed follows the sample); TIME/BPM LED blinks in mode 9; code and state in 11 more factory test page methods
 
@@ -81,8 +81,8 @@ LED_RANGE, LED_RANGE_OLD, LED_RANGE_NEW = 0x0C0CBF0C, bytes.fromhex('e406 3346 8
 REFRESH_RANGE, REFRESH_OLD, REFRESH_NEW = 0x0C0CC0E6, bytes.fromhex('e402 73fb 3346 890e'), 0xE403
 # Version screen (hold MARK at power-on): Roland's text routine 0x0C0F112C turns the version number 107 into
 # digits by adding '0'. The number itself (0x0C0F1128, also read by the removed test pages) stays 107; only
-# the text changes: last digit 7 + 0x2B = '2', middle digit 0 + 0x31 = '1', first digit 1 + 0x31 = '2': 2.12.
-VERSION_TEXT = ((0x0C0F1142, 0x7030, 0x702B),   # add #48,r0 -> add #43,r0 (ones digit: '7' -> '2')
+# the text changes: last digit 7 + 0x2C = '3', middle digit 0 + 0x31 = '1', first digit 1 + 0x31 = '2': 2.13.
+VERSION_TEXT = ((0x0C0F1142, 0x7030, 0x702C),   # add #48,r0 -> add #44,r0 (ones digit: '7' -> '3')
                 (0x0C0F115A, 0x7030, 0x7031),   # add #48,r0 -> add #49,r0 (tens digit: '0' -> '1')
                 (0x0C0F116C, 0x7030, 0x7031))   # add #48,r0 -> add #49,r0 (hundreds digit: '1' -> '2')
 # More test page methods with no literal pool used from outside, no branch in, one vtable pointer:
@@ -144,7 +144,6 @@ REQ_PTR, REQ_FN, REQ_LOAD = 0x0C08948C, 0x0C093D28, 0x0C0892DE   # note handler 
 PLAY_PTR, PLAY_FN = 0x0C093F44, 0x0C084974       # play request 0x0C093D28 -> start pad (kind, pad, vel)
 REL_PTR, REL_FN = 0x0C093F38, 0x0C084B48         # release request 0x0C093DE4 -> pad released (pad)
 PEV_SLOT, PEV_FN = 0x0C12E060, 0x0C0C5384        # CPagePlay vtable: event handler
-REM_SLOT, REM_FN = 0x0C12F1AC, 0x0C0CA404        # CPageRemain vtable: event handler
 NOTE_PTR, NOTE_FN = 0x0C08F778, 0x0C089330      # event loop 0x0C08F708 -> note handler (event)
 GATE_PTR, GATE_FN, GATE_LOAD = 0x0C0F2784, 0x0C08FD70, 0x0C0F2676   # MIDI receive -> "notes allowed?" (its own literal)
 GATE2_PTR, GATE2_LOADS = 0x0C089480, (0x0C08930A, 0x0C08935E)      # note handlers -> the same check, MIDI events only
@@ -407,7 +406,7 @@ def build(official):
     # the play request is called through three literals; only the note handler's one (loaded once) is swapped
     assert u32(img, REQ_PTR) == REQ_FN and const_loads_into(img, REQ_PTR, REQ_PTR + 4, []) == [(REQ_LOAD, REQ_PTR)], \
         'play request literal'
-    for p, f in ((LOAD_PTR, LOAD_FN), (TICK_PTR, TICK_FN), (PLAY_PTR, PLAY_FN), (REL_PTR, REL_FN), (PEV_SLOT, PEV_FN), (REM_SLOT, REM_FN),
+    for p, f in ((LOAD_PTR, LOAD_FN), (TICK_PTR, TICK_FN), (PLAY_PTR, PLAY_FN), (REL_PTR, REL_FN), (PEV_SLOT, PEV_FN),
                  (NOTE_PTR, NOTE_FN), (PEN_SLOT, PEN_FN), (PREF_SLOT, PREF_FN)):
         assert [i for i in range(0, len(img) - 3, 4) if struct.unpack('>I', img[i:i + 4])[0] == f] == [p - BASE], \
             f'{f:#x} is referenced from more than {p:#x}'
@@ -451,7 +450,6 @@ def build(official):
     put32(new, PLAY_PTR, PLAY_FN, syms['play_stub'])
     put32(new, REL_PTR, REL_FN, syms['rel_stub'])
     put32(new, PEV_SLOT, PEV_FN, syms['pev_stub'])
-    put32(new, REM_SLOT, REM_FN, syms['rem_stub'])
     put32(new, NOTE_PTR, NOTE_FN, syms['note_stub'])
     put32(new, GATE_PTR, GATE_FN, syms['gate_stub'])
     put32(new, GATE2_PTR, GATE_FN, syms['gate2_stub'])
@@ -496,7 +494,7 @@ def build(official):
     left = [hex(BASE + i) for i in range(0, len(new) - 3, 4) if DEV_METHOD <= struct.unpack('>I', new[i:i + 4])[0] < DEV_END
             and not any(lo - BASE <= i < hi - BASE for lo, hi in ours)]
     assert not left, f'pointers into the reused test page method: {left}'
-    hooks = {REQ_PTR: syms['req_stub'], PLAY_PTR: syms['play_stub'], REL_PTR: syms['rel_stub'], PEV_SLOT: syms['pev_stub'], REM_SLOT: syms['rem_stub'], NOTE_PTR: syms['note_stub'], GATE_PTR: syms['gate_stub'], GATE2_PTR: syms['gate2_stub'], HOLD_PTR: syms['hold_stub'], XCOPY_PTR: syms['xcopy_stub'], XEXCH_PTR: syms['xexch_stub'], PEN_SLOT: syms['pen_stub'], PREF_SLOT: syms['pref_stub'], **{p: syms['lights_ret'] for p in LIGHTS_SLOTS}}   # planned entries
+    hooks = {REQ_PTR: syms['req_stub'], PLAY_PTR: syms['play_stub'], REL_PTR: syms['rel_stub'], PEV_SLOT: syms['pev_stub'], NOTE_PTR: syms['note_stub'], GATE_PTR: syms['gate_stub'], GATE2_PTR: syms['gate2_stub'], HOLD_PTR: syms['hold_stub'], XCOPY_PTR: syms['xcopy_stub'], XEXCH_PTR: syms['xexch_stub'], PEN_SLOT: syms['pen_stub'], PREF_SLOT: syms['pref_stub'], **{p: syms['lights_ret'] for p in LIGHTS_SLOTS}}   # planned entries
     light_ptrs = [BASE + i for i in range(0, len(new) - 3, 4)
                   if LIGHTS <= struct.unpack('>I', new[i:i + 4])[0] < LIGHTS_END
                   and not any(a - BASE <= i < b - BASE for a, b in ours)]
@@ -522,7 +520,7 @@ def build(official):
                {m[4] - BASE + k for m in LIT_MOVES for k in range(4)} | {m[0] - BASE + k for m in LIT_MOVES for k in range(2)} |
                set(range(OSFN - BASE, OSFN - BASE + len(persist))) | set(range(WSPFN - BASE, WSPFN - BASE + len(wsp))) |
                set(range(HELPER_CODE - BASE, HELPER_CODE - BASE + len(helper))) |
-               {a - BASE + k for a in (LOAD_PTR, TICK_PTR, DEV_SLOT, REQ_PTR, PLAY_PTR, REL_PTR, PEV_SLOT, REM_SLOT, NOTE_PTR, GATE_PTR, GATE2_PTR, HOLD_PTR, XCOPY_PTR, XEXCH_PTR, PEN_SLOT, PREF_SLOT) for k in range(4)} |
+               {a - BASE + k for a in (LOAD_PTR, TICK_PTR, DEV_SLOT, REQ_PTR, PLAY_PTR, REL_PTR, PEV_SLOT, NOTE_PTR, GATE_PTR, GATE2_PTR, HOLD_PTR, XCOPY_PTR, XEXCH_PTR, PEN_SLOT, PREF_SLOT) for k in range(4)} |
                set(range(DEV - BASE, DEV - BASE + len(dev))) |
                set(range(BOOTGAP - BASE, BOOTGAP - BASE + len(bootgap))) |
                set(range(LIGHTS - BASE, LIGHTS - BASE + len(lights))) |
