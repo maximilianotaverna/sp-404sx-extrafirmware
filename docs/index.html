@@ -105,6 +105,7 @@
       <li>Works together with Time Modify. Moving CTRL&nbsp;2 resets varispeed, the same way it resets Time Modify.</li>
       <li>Speeds are saved on the card (<code>VARISPD.BIN</code>) and follow the sample when you copy or exchange pads.</li>
       <li><strong>Chromatic mode:</strong> play a pad, press SHIFT&nbsp;+&nbsp;TIME/BPM, and its bank becomes a keyboard for it (pad&nbsp;1 = its own pitch, +1 semitone per pad). CTRL&nbsp;1 sets the bank&rsquo;s MIDI channel (middle&nbsp;C = its own pitch), CTRL&nbsp;3 the octave. Several banks at once; works while resampling, so you can record melodies.</li>
+      <li><strong>Auto-slice:</strong> play a source pad, hold REMAIN and press MARK, choose 4/8/12/16 slices with CTRL&nbsp;3, then press the first empty destination pad.</li>
       <li>Roland&rsquo;s factory hardware-test mode is removed to make room. Nothing else changes.</li>
     </ul>
   </section>
@@ -115,7 +116,7 @@
   </footer>
 </main>
 
-<script src="extrafirmware-patch.js"></script>
+<script src="extrafirmware-patch.js?v=f726fb67"></script>
 <script src="patcher-core.js"></script>
 <script>
 (function () {
@@ -124,7 +125,7 @@
   var input = document.getElementById('file'), drop = document.getElementById('drop');
   var status = document.getElementById('status'), dl = document.getElementById('dl');
   var result = null;
-  document.getElementById('badge').textContent = 'v' + data.release + ' · for SP-404SX and SP-404A';
+  document.getElementById('badge').textContent = 'v' + data.release + ' sample-chop · for SP-404SX and SP-404A';
 
   // link back to the repository when served from GitHub Pages (user.github.io/repo/)
   var host = location.hostname, seg = location.pathname.split('/').filter(Boolean)[0];
@@ -146,8 +147,8 @@
       core.apply(new Uint8Array(reader.result), data).then(function (r) {
         if (!r.ok) { show('err', r.message); return; }
         result = r.bytes; dl.disabled = false;
-        show('ok', 'Official 1.07 file recognised. ' + data.name + ' v' + data.release +
-          ' is ready (SHA-256 ' + r.sha256.slice(0, 16) + '…).');
+        show('ok', 'Official 1.07 file recognised. Sample-chop build is ready (' + r.bytes.length +
+          ' bytes, SHA-256 ' + r.sha256 + ').');
       });
     };
     reader.readAsArrayBuffer(file);
